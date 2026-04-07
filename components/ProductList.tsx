@@ -61,7 +61,7 @@ export default function ProductList() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [warningMessage, setWarningMessage] = useState('');
-  const { dispatch } = useApp();
+  const { state, dispatch } = useApp();
 
   useEffect(() => {
     fetchProducts();
@@ -100,6 +100,10 @@ export default function ProductList() {
     dispatch({ type: 'ADD_TO_CART', payload: { product, quantity: 1 } });
   };
 
+  const updateQuantity = (productId: string, quantity: number) => {
+    dispatch({ type: 'UPDATE_QUANTITY', payload: { productId, quantity } });
+  };
+
   if (loading) {
     return <div className="text-center py-8">Loading products...</div>;
   }
@@ -112,9 +116,20 @@ export default function ProductList() {
         </div>
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {products.map((product) => (
-          <ProductCard key={product.id} product={product} onAddToCart={addToCart} />
-        ))}
+        {products.map((product) => {
+          const cartQuantity =
+            state.cart.find((item) => item.product.id === product.id)?.quantity ?? 0;
+
+          return (
+            <ProductCard
+              key={product.id}
+              product={product}
+              onAddToCart={addToCart}
+              cartQuantity={cartQuantity}
+              onUpdateQuantity={updateQuantity}
+            />
+          );
+        })}
       </div>
     </>
   );

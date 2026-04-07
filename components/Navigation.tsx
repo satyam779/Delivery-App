@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useApp } from '@/lib/app-context';
 import { supabase } from '@/lib/supabase';
@@ -65,10 +66,17 @@ export default function Navigation() {
   return (
     <nav className="bg-white shadow-sm border-b">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex min-h-16 items-center justify-between py-3 md:py-0">
+        <div className="relative flex min-h-16 items-center justify-between py-3 md:py-0">
           <div className="flex min-w-0 items-center gap-4">
-            <Link href="/" className="text-lg font-bold text-black sm:text-xl">
-              Delivery App
+            <Link href="/" className="flex items-center gap-3 text-lg font-bold text-black sm:text-xl">
+              <Image
+                src="/favicon.ico"
+                alt="Delivery App logo"
+                width={36}
+                height={36}
+                className="rounded-md"
+              />
+              <span>Delivery App</span>
             </Link>
             <div className="hidden items-baseline space-x-2 md:ml-6 md:flex">
               <Link href="/products" className="rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-100">
@@ -126,18 +134,18 @@ export default function Navigation() {
             aria-expanded={isMenuOpen}
             aria-label="Toggle navigation menu"
             onClick={() => setIsMenuOpen((open) => !open)}
-            className="inline-flex items-center justify-center rounded-md border border-gray-200 px-3 py-2 text-sm font-medium text-black md:hidden"
+            className="inline-flex items-center justify-center rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-semibold text-black shadow-sm md:hidden"
           >
             {isMenuOpen ? 'Close' : 'Menu'}
           </button>
         </div>
         {isMenuOpen && (
-          <div className="border-t border-gray-200 py-3 md:hidden">
-            <div className="flex flex-col gap-1">
+          <div className="absolute right-4 top-[72px] z-30 w-[min(18rem,calc(100vw-2rem))] rounded-2xl border border-orange-100 bg-white p-3 shadow-[0_20px_40px_-24px_rgba(15,23,42,0.45)] md:hidden sm:right-6">
+            <div className="flex flex-col gap-2">
               <Link
                 href="/products"
                 onClick={() => setIsMenuOpen(false)}
-                className="rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-100"
+                className="rounded-xl bg-orange-50 px-4 py-3 text-sm font-medium text-black transition hover:bg-orange-100"
               >
                 Products
               </Link>
@@ -145,7 +153,7 @@ export default function Navigation() {
                 <Link
                   href="/orders"
                   onClick={() => setIsMenuOpen(false)}
-                  className="rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-100"
+                  className="rounded-xl bg-orange-50 px-4 py-3 text-sm font-medium text-black transition hover:bg-orange-100"
                 >
                   Orders
                 </Link>
@@ -154,7 +162,7 @@ export default function Navigation() {
                 <Link
                   href="/admin"
                   onClick={() => setIsMenuOpen(false)}
-                  className="rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-100"
+                  className="rounded-xl bg-orange-50 px-4 py-3 text-sm font-medium text-black transition hover:bg-orange-100"
                 >
                   Admin
                 </Link>
@@ -163,7 +171,7 @@ export default function Navigation() {
                 <Link
                   href="/agent"
                   onClick={() => setIsMenuOpen(false)}
-                  className="rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-100"
+                  className="rounded-xl bg-orange-50 px-4 py-3 text-sm font-medium text-black transition hover:bg-orange-100"
                 >
                   Agent Portal
                 </Link>
@@ -173,16 +181,16 @@ export default function Navigation() {
                   <Link
                     href="/cart"
                     onClick={() => setIsMenuOpen(false)}
-                    className="rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-100"
+                    className="rounded-xl bg-orange-50 px-4 py-3 text-sm font-medium text-black transition hover:bg-orange-100"
                   >
                     Cart {cartItemCount > 0 ? `(${cartItemCount})` : ''}
                   </Link>
-                  <div className="px-3 py-2 text-sm text-black break-all">
+                  <div className="rounded-xl border border-orange-100 px-4 py-3 text-sm text-black break-all">
                     Welcome, {state.user.email}
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="rounded-md px-3 py-2 text-left text-sm font-medium text-black hover:bg-gray-100"
+                    className="rounded-xl bg-black px-4 py-3 text-left text-sm font-medium text-white transition hover:bg-gray-800"
                   >
                     Logout
                   </button>
@@ -192,14 +200,14 @@ export default function Navigation() {
                   <Link
                     href="/login"
                     onClick={() => setIsMenuOpen(false)}
-                    className="rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-100"
+                    className="rounded-xl bg-orange-50 px-4 py-3 text-sm font-medium text-black transition hover:bg-orange-100"
                   >
                     Login
                   </Link>
                   <Link
                     href="/signup"
                     onClick={() => setIsMenuOpen(false)}
-                    className="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                    className="rounded-xl bg-blue-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-blue-700"
                   >
                     Sign Up
                   </Link>

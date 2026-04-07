@@ -6,9 +6,16 @@ import { getProductImageUrl } from '@/lib/product-images';
 interface ProductCardProps {
   product: Product;
   onAddToCart: (product: Product) => void;
+  cartQuantity: number;
+  onUpdateQuantity: (productId: string, quantity: number) => void;
 }
 
-export default function ProductCard({ product, onAddToCart }: ProductCardProps) {
+export default function ProductCard({
+  product,
+  onAddToCart,
+  cartQuantity,
+  onUpdateQuantity,
+}: ProductCardProps) {
   const imageUrl = getProductImageUrl(product);
 
   return (
@@ -29,12 +36,32 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
         )}
         <div className="flex items-center justify-between">
           <span className="text-xl font-bold text-gray-900">{formatCurrency(product.price)}</span>
-          <button
-            onClick={() => onAddToCart(product)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-          >
-            Add to Cart
-          </button>
+          {cartQuantity > 0 ? (
+            <div className="flex items-center rounded-md border border-blue-600 overflow-hidden">
+              <button
+                onClick={() => onUpdateQuantity(product.id, cartQuantity - 1)}
+                className="bg-blue-600 px-3 py-2 text-white hover:bg-blue-700 transition-colors"
+              >
+                -
+              </button>
+              <span className="min-w-10 px-3 text-center text-sm font-semibold text-black">
+                {cartQuantity}
+              </span>
+              <button
+                onClick={() => onUpdateQuantity(product.id, cartQuantity + 1)}
+                className="bg-blue-600 px-3 py-2 text-white hover:bg-blue-700 transition-colors"
+              >
+                +
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => onAddToCart(product)}
+              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+            >
+              Add to Cart
+            </button>
+          )}
         </div>
       </div>
     </div>
