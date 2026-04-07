@@ -1,4 +1,7 @@
+import Image from 'next/image';
+import { formatCurrency } from '@/lib/currency';
 import { Product } from '@/lib/types';
+import { getProductImageUrl } from '@/lib/product-images';
 
 interface ProductCardProps {
   product: Product;
@@ -6,18 +9,18 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, onAddToCart }: ProductCardProps) {
+  const imageUrl = getProductImageUrl(product);
+
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-      <div className="h-48 bg-gray-200 flex items-center justify-center">
-        {product.image_url ? (
-          <img
-            src={product.image_url}
-            alt={product.name}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="text-gray-400 text-4xl">🍕</div>
-        )}
+      <div className="relative h-48 bg-gray-200">
+        <Image
+          src={imageUrl}
+          alt={product.name}
+          fill
+          sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+          className="object-cover"
+        />
       </div>
       <div className="p-4">
         <h3 className="text-lg font-semibold text-gray-900 mb-2">{product.name}</h3>
@@ -25,7 +28,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
           <p className="text-gray-600 text-sm mb-2">{product.description}</p>
         )}
         <div className="flex items-center justify-between">
-          <span className="text-xl font-bold text-gray-900">${product.price.toFixed(2)}</span>
+          <span className="text-xl font-bold text-gray-900">{formatCurrency(product.price)}</span>
           <button
             onClick={() => onAddToCart(product)}
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"

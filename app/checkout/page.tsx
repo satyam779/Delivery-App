@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useApp } from '@/lib/app-context';
 import { useRouter } from 'next/navigation';
+import { formatCurrency } from '@/lib/currency';
 
 type LocationState = {
   lat: number;
@@ -16,6 +17,7 @@ export default function CheckoutPage() {
   const [deliveryLocation, setDeliveryLocation] = useState<LocationState | null>(null);
   const [locationStatus, setLocationStatus] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const [orderSubmitted, setOrderSubmitted] = useState(false);
 
   const total = state.cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   const deliveryFee = 2.99;
@@ -64,8 +66,9 @@ export default function CheckoutPage() {
         throw new Error(apiError);
       }
 
+      setOrderSubmitted(true);
       dispatch({ type: 'CLEAR_CART' });
-      router.push(`/order-confirmation?order_id=${orderId}`);
+      router.replace(`/order-confirmation?order_id=${orderId}`);
     } catch (error: any) {
       alert('Payment failed: ' + error.message);
     } finally {
@@ -81,13 +84,18 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (state.cart.length === 0) {
+    if (orderSubmitted) {
+      setRedirecting(false);
+      return;
+    }
+
+    if (!loading && state.cart.length === 0) {
       router.push('/cart');
       return;
     }
 
     setRedirecting(false);
-  }, [state.user, state.cart, router]);
+  }, [loading, orderSubmitted, state.user, state.cart, router]);
 
   if (redirecting) {
     return null;
@@ -192,21 +200,21 @@ export default function CheckoutPage() {
             {state.cart.map((item) => (
               <div key={item.product.id} className="flex justify-between mb-2">
                 <span>{item.product.name} x{item.quantity}</span>
-                <span>${(item.product.price * item.quantity).toFixed(2)}</span>
+                <span>{formatCurrency(item.product.price * item.quantity)}</span>
               </div>
             ))}
             <div className="border-t pt-2 mt-4 space-y-2">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span>${total.toFixed(2)}</span>
+                <span>{formatCurrency(total)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Delivery</span>
-                <span>${deliveryFee.toFixed(2)}</span>
+                <span>{formatCurrency(deliveryFee)}</span>
               </div>
               <div className="flex justify-between font-semibold text-lg border-t pt-2">
                 <span>Total</span>
-                <span>${finalTotal.toFixed(2)}</span>
+                <span>{formatCurrency(finalTotal)}</span>
               </div>
             </div>
             <button

@@ -9,35 +9,53 @@ import ProductCard from './ProductCard';
 const fallbackProducts: Product[] = [
   {
     id: '1',
-    name: 'Margherita Pizza',
-    description: 'Classic cheese pizza',
-    price: 12.99,
+    name: 'Egg Puff',
+    description: 'Egg Puffs with cheese',
+    price: 30,
     image_url: '',
-    category: 'Pizza',
+    category: 'Puff',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
   {
     id: '2',
-    name: 'Pepperoni Pizza',
-    description: 'Pizza with pepperoni',
-    price: 14.99,
+    name: 'Cool Drinks',
+    description: 'Thumbs up, Sprite, Coke, Fanta',
+    price: 20,
     image_url: '',
-    category: 'Pizza',
+    category: 'Drinks',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
   {
     id: '3',
-    name: 'Cheeseburger',
-    description: 'Juicy cheeseburger with fries',
-    price: 9.99,
+    name: 'Biryani',
+    description: 'Chicken Biryani',
+    price: 150,
     image_url: '',
     category: 'Burgers',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
 ];
+
+function applyProductCardImages(products: Product[]) {
+  return products.map((product, index) =>
+    index === 0
+      ? { ...product, image_url: '/egg-puff.jpg' }
+      : index === 1
+      ? { ...product, image_url: '/coke.jpg' }
+      : index === 2
+      ? { ...product, image_url: '/biryani.jpg' }
+      : index === 3
+      ? { ...product, image_url: '/chicken burger.webp' }
+      : index === 4
+      ? { ...product, image_url: '/salad.avif' }
+      : index === 5
+      ? { ...product, image_url: '/pasta.jpg' }
+      : product
+  );
+}
 
 export default function ProductList() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -59,17 +77,17 @@ export default function ProductList() {
       if (error) throw error;
       
       if (data && data.length > 0) {
-        setProducts(data);
+        setProducts(applyProductCardImages(data));
       } else {
         // No products found, use fallback
-        setProducts(fallbackProducts);
+        setProducts(applyProductCardImages(fallbackProducts));
         setWarningMessage(
           'Unable to load products from Supabase. Showing sample products instead. Check your Supabase URL and anon key in .env.local and run supabase-schema.sql if needed.'
         );
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching products:', error);
-      setProducts(fallbackProducts);
+      setProducts(applyProductCardImages(fallbackProducts));
       setWarningMessage(
         'Unable to load products from Supabase. Showing sample products instead. Check your Supabase URL and anon key in .env.local and run supabase-schema.sql if needed.'
       );

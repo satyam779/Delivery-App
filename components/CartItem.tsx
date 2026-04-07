@@ -1,4 +1,5 @@
 import { CartItem as CartItemType } from '@/lib/types';
+import { formatCurrency } from '@/lib/currency';
 
 interface CartItemProps {
   item: CartItemType;
@@ -24,7 +25,7 @@ export default function CartItem({ item, onUpdateQuantity, onRemove }: CartItemP
       </div>
       <div className="flex-1">
         <h3 className="font-semibold text-gray-900">{product.name}</h3>
-        <p className="text-gray-600">${product.price.toFixed(2)} each</p>
+        <p className="text-gray-600">{formatCurrency(product.price)} each</p>
       </div>
       <div className="flex items-center space-x-2">
         <button
@@ -43,7 +44,7 @@ export default function CartItem({ item, onUpdateQuantity, onRemove }: CartItemP
       </div>
       <div className="text-right">
         <p className="font-semibold text-gray-900">
-          ${(product.price * quantity).toFixed(2)}
+          {formatCurrency(product.price * quantity)}
         </p>
         <button
           onClick={() => onRemove(product.id)}

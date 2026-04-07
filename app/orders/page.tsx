@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { useApp } from '@/lib/app-context';
 import { useRouter } from 'next/navigation';
 import { Order, Delivery } from '@/lib/types';
+import { formatCurrency } from '@/lib/currency';
 
 const LiveTrackingMap = dynamic(() => import('@/components/LiveTrackingMap'), {
   ssr: false,
@@ -95,7 +96,7 @@ export default function OrdersPage() {
                       {delivery ? (delivery.status === 'assigned' ? 'Accepted' : delivery.status === 'in_progress' ? 'On the way' : 'Delivered') : 'Pending'}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-600 mb-2">Total: ${order.total_amount.toFixed(2)}</p>
+                  <p className="text-sm text-gray-600 mb-2">Total: {formatCurrency(order.total_amount)}</p>
                   <p className="text-sm text-gray-600">{order.delivery ? `Delivery ${order.delivery.status}` : 'Waiting for agent assignment'}</p>
                 </button>
               );
@@ -118,7 +119,7 @@ export default function OrdersPage() {
               <div className="grid gap-4 md:grid-cols-2 mb-6">
                 <div className="rounded-lg bg-slate-50 p-4">
                   <p className="text-sm text-gray-500">Order Total</p>
-                  <p className="mt-1 text-xl font-semibold text-gray-900">${selectedOrder.total_amount.toFixed(2)}</p>
+                  <p className="mt-1 text-xl font-semibold text-gray-900">{formatCurrency(selectedOrder.total_amount)}</p>
                 </div>
                 <div className="rounded-lg bg-slate-50 p-4">
                   <p className="text-sm text-gray-500">Delivery Address</p>
@@ -131,7 +132,7 @@ export default function OrdersPage() {
                   {selectedOrder.order_items?.map((item: any) => (
                     <li key={item.id} className="flex justify-between text-sm text-gray-700">
                       <span>{item.product?.name ?? item.product_id} x{item.quantity}</span>
-                      <span>${item.price.toFixed(2)}</span>
+                      <span>{formatCurrency(item.price)}</span>
                     </li>
                   ))}
                 </ul>

@@ -5,6 +5,7 @@ import { Delivery } from '@/lib/types';
 import { useApp } from '@/lib/app-context';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import { formatCurrency } from '@/lib/currency';
 
 // Dynamically import the map component to avoid SSR issues
 const LiveTrackingMap = dynamic(() => import('@/components/LiveTrackingMap'), {
@@ -123,7 +124,7 @@ export default function AgentPage() {
                     Address: {delivery.order?.delivery_address}
                   </p>
                   <p className="text-sm text-gray-600 mb-4">
-                    Total: ${delivery.order?.total_amount.toFixed(2)}
+                    Total: {delivery.order ? formatCurrency(delivery.order.total_amount) : 'N/A'}
                   </p>
                   <div className="flex space-x-2">
                     {delivery.status === 'assigned' && (

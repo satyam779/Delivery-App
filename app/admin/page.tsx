@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Order, Delivery, User } from '@/lib/types';
 import { useApp } from '@/lib/app-context';
 import { useRouter } from 'next/navigation';
+import { formatCurrency } from '@/lib/currency';
 
 export default function AdminPage() {
   const { state } = useApp();
@@ -134,7 +135,7 @@ export default function AdminPage() {
                   <div>
                     <p className="font-semibold">Order #{order.id.slice(-8)}</p>
                     <p className="text-sm text-gray-600">
-                      Total: ${order.total_amount.toFixed(2)}
+                      Total: {formatCurrency(order.total_amount)}
                     </p>
                     <p className="text-sm text-gray-600">
                       Address: {order.delivery_address}

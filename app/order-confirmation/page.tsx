@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { formatCurrency } from '@/lib/currency';
 
 export default function OrderConfirmationPage() {
   const [orderId, setOrderId] = useState<string | null>(null);
@@ -65,12 +66,12 @@ export default function OrderConfirmationPage() {
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
       <div className="bg-green-50 border border-green-200 rounded-lg p-8">
-        <div className="text-6xl mb-4">✅</div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">Order Placed!</h1>
-        <p className="text-gray-600 mb-6">Your order has been placed successfully.</p>
+        <div className="text-4xl font-semibold text-green-700 mb-4">Success</div>
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">Order Placed Successfully</h1>
+        <p className="text-gray-600 mb-6">Your order was placed successfully after you completed the order.</p>
         <div className="bg-white p-4 rounded-md shadow-sm mb-6 text-left">
           <p className="text-sm text-gray-600">Order ID: {orderId}</p>
-          <p className="text-sm text-gray-600">Total: ${order?.total_amount?.toFixed(2) ?? 'N/A'}</p>
+          <p className="text-sm text-gray-600">Total: {typeof order?.total_amount === 'number' ? formatCurrency(order.total_amount) : 'N/A'}</p>
           <p className="text-sm text-gray-600">Status: <span className="font-semibold">{statusLabel}</span></p>
           {order?.delivery && (
             <p className="text-sm text-gray-600">Delivery agent status: <span className="font-semibold">{order.delivery.status}</span></p>
