@@ -124,10 +124,31 @@ export default function LiveTrackingMap({
     }
   }, [delivery.current_lat, delivery.current_lng]);
 
-  // 🏎️ Ultra-Smooth Glide Movement
+  // 🏎️ CONTINUOUS UPDATES: Real GPS Tracking for Non-Simulated Movement
+  useEffect(() => {
+    if (simulateMovement || !navigator.geolocation) return;
+
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setCurrentPosition([latitude, longitude]);
+        onLocationUpdate(latitude, longitude);
+      },
+      (err) => console.warn('Real-time tracking error:', err),
+      {
+        enableHighAccuracy: true,
+        maximumAge: 1000,
+        timeout: 10000,
+      }
+    );
+
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, [simulateMovement, onLocationUpdate]);
+
+  // 🏎️ Ultra-Smooth Glide Movement (SIMULATION MODE)
   useEffect(() => {
     if (!simulateMovement || currentPosition[0] === 0 || routeCoordinates.length < 2) return;
-
+    
     let index = 0;
     const interval = setInterval(() => {
       if (index < routeCoordinates.length - 1) {
@@ -135,15 +156,14 @@ export default function LiveTrackingMap({
         const p1 = routeCoordinates[index - 1];
         const p2 = routeCoordinates[index];
         setRotation(calculateBearing(p1, p2));
-
-        // Use shorter steps or more frequent updates for "continuous" feel
+        
         setCurrentPosition(p2);
         onLocationUpdate(p2[0], p2[1]);
       } else {
         clearInterval(interval);
       }
-    }, 1200); // Faster interval for "Gliding" feel
-
+    }, 1200);
+    
     return () => clearInterval(interval);
   }, [simulateMovement, routeCoordinates, onLocationUpdate]);
 

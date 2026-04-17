@@ -12,6 +12,8 @@ const LiveTrackingMap = dynamic(() => import('@/components/LiveTrackingMap'), {
   loading: () => <div className="h-96 bg-gray-200 rounded-lg flex items-center justify-center">Loading map...</div>,
 });
 
+import { supabase } from '@/lib/supabase';
+
 export default function OrdersPage() {
   const { state } = useApp();
   const router = useRouter();
@@ -52,9 +54,37 @@ export default function OrdersPage() {
     }
 
     loadOrders();
-    // High-frequency 4s refresh for 'Live' agent movement visibility
-    const interval = setInterval(loadOrders, 4000);
-    return () => clearInterval(interval);
+
+    // REALTIME SUBSCRIPTION: Listen for live updates to orders
+    const channel = supabase
+      .channel('public:orders')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+          filter: `user_id=eq.${state.user.id}`,
+        },
+        (payload) => {
+          const updatedOrder = payload.new as Order;
+          setOrders((prev) => 
+            prev.map((o) => (o.id === updatedOrder.id ? { ...o, ...updatedOrder } : o))
+          );
+          
+          setSelectedOrder((prev) => {
+            if (prev?.id === updatedOrder.id) {
+              return { ...prev, ...updatedOrder };
+            }
+            return prev;
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [state.user]);
 
   const getStatusLabel = (order: Order) => {
@@ -154,7 +184,7 @@ export default function OrdersPage() {
                 </div>
               </div>
 
-              {(selectedOrder.status === 'accepted' || selectedOrder.status === 'in_progress') ? (
+              {(selectedOrder.status === 'pending' || selectedOrder.status === 'accepted' || selectedOrder.status === 'in_progress') ? (
                 <div className="mt-10 overflow-hidden rounded-[2rem] border border-gray-100">
                   <div className="p-6 bg-blue-50/50 border-b border-gray-100">
                     <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
