@@ -74,7 +74,7 @@ export default function LiveTrackingMap({
   );
   
   const [eta, setEta] = useState<number>(12);
-  const destinationAddress = delivery.order?.delivery_address ?? orderAddress;
+  const destinationAddress = (delivery as any).order?.delivery_address ?? (delivery as any).delivery_address ?? orderAddress;
 
   // Sync agent position from props
   useEffect(() => {
