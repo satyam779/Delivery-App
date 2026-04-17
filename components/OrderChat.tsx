@@ -59,7 +59,7 @@ export default function OrderChat({ orderId, recipientName, currentUserId, isOpe
           });
         }
       )
-      .subscribe((status) => {
+      .subscribe((status: string) => {
         setIsConnected(status === 'SUBSCRIBED');
       });
 
