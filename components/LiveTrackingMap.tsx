@@ -124,20 +124,35 @@ export default function LiveTrackingMap({
     }
   }, [delivery.current_lat, delivery.current_lng]);
 
-  // 🏎️ CONTINUOUS UPDATES: Real GPS Tracking for Non-Simulated Movement
+  // 🏎️ CONTINUOUS UPDATES: Real GPS Tracking with zero caching
   useEffect(() => {
     if (simulateMovement || !navigator.geolocation) return;
 
+    let lastUpdateAt = 0;
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
-        const { latitude, longitude } = pos.coords;
-        setCurrentPosition([latitude, longitude]);
-        onLocationUpdate(latitude, longitude);
+        const { latitude, longitude, heading } = pos.coords;
+        const now = Date.now();
+        
+        // Update local map position immediately for agent
+        setCurrentPosition(prev => {
+          if (prev[0] !== 0) {
+             const newRotation = calculateBearing(prev, [latitude, longitude]);
+             if (newRotation !== 0) setRotation(newRotation);
+          }
+          return [latitude, longitude];
+        });
+
+        // Throttle database updates slightly to 800ms for stability but high accuracy
+        if (now - lastUpdateAt > 800) {
+          onLocationUpdate(latitude, longitude);
+          lastUpdateAt = now;
+        }
       },
       (err) => console.warn('Real-time tracking error:', err),
       {
         enableHighAccuracy: true,
-        maximumAge: 1000,
+        maximumAge: 0, // Force fresh location every second
         timeout: 10000,
       }
     );
