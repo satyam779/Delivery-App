@@ -33,6 +33,38 @@ export default function CheckoutPage() {
     alert('UPI ID copied to clipboard');
   };
 
+  const captureLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationStatus('GPS not supported');
+      return;
+    }
+    
+    setLocationStatus('Locating you...');
+    
+    // Command the browser to bypass ALL cache and get the highest accuracy signal
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude, accuracy } = pos.coords;
+        console.log(`GPS Success: Lat ${latitude}, Lng ${longitude}, Accuracy: ${accuracy}m`);
+        
+        setDeliveryLocation({ lat: latitude, lng: longitude });
+        setLocationStatus('');
+        
+        // Update the address textarea with the FRESH coordinates
+        setAddress(`GPS Location: ${latitude.toFixed(6)}, ${longitude.toFixed(6)} (Accuracy: ${Math.round(accuracy)}m)`);
+      },
+      (err) => {
+        console.error('GPS Error:', err);
+        setLocationStatus(`Error: ${err.message}`);
+      },
+      { 
+        enableHighAccuracy: true, 
+        maximumAge: 0, 
+        timeout: 20000 
+      }
+    );
+  };
+
   const handleCheckout = async () => {
     if (!address.trim()) {
       alert('Please enter a delivery address');
@@ -103,66 +135,68 @@ export default function CheckoutPage() {
           <div>
              <h2 className="text-xl font-bold mb-4 text-gray-800">Delivery Address</h2>
              
-             {/* Enhanced GPS Section */}
-             <div className={`mb-6 p-6 rounded-[2rem] border-2 transition-all ${
+             <div className={`mb-6 p-6 rounded-[2rem] border-2 transition-all shadow-lg ${
                deliveryLocation 
                  ? 'bg-green-50 border-green-200' 
                  : 'bg-indigo-50 border-indigo-100'
              }`}>
                <div className="flex items-center gap-3 mb-4">
-                 <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-xl shadow-sm ${
+                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-sm ${
                    deliveryLocation ? 'bg-green-600 text-white' : 'bg-indigo-600 text-white'
                  }`}>
-                   {deliveryLocation ? '✅' : '📍'}
+                   {deliveryLocation ? '✅' : '🌐'}
                  </div>
                  <div>
-                   <p className="font-bold text-gray-900">
-                     {deliveryLocation ? 'Real location captured' : 'Step 1: Capture GPS'}
+                   <p className="font-black text-gray-900 leading-tight">
+                     {deliveryLocation ? 'Exact Location Found' : 'Pinpoint Your Location'}
                    </p>
                    {deliveryLocation ? (
-                     <p className="text-[10px] text-green-600 font-black uppercase tracking-widest leading-none">High Accuracy Link Ready</p>
+                     <p className="text-[10px] text-green-600 font-black uppercase tracking-widest leading-none mt-1 animate-pulse">Live Signal Locked</p>
                    ) : (
-                     <p className="text-[10px] text-indigo-400 font-black uppercase tracking-widest leading-none">Essential for Live Tracking</p>
+                     <p className="text-[10px] text-indigo-400 font-black uppercase tracking-widest leading-none mt-1">Satellite Lock Required</p>
                    )}
                  </div>
                </div>
 
                {deliveryLocation ? (
-                 <div className="bg-white/60 p-3 rounded-xl border border-green-100 flex items-center justify-between">
-                   <p className="text-xs text-green-700 font-black font-mono">
-                     LOC: {deliveryLocation.lat.toFixed(4)}, {deliveryLocation.lng.toFixed(4)}
-                   </p>
-                   <button 
-                     onClick={() => setDeliveryLocation(null)}
-                     className="text-[10px] font-black text-red-500 hover:text-red-700 underline"
-                   >
-                     Reset
-                   </button>
+                 <div className="bg-white/80 p-4 rounded-2xl border border-green-100">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Real-Time GPS Data</p>
+                      <button 
+                        onClick={() => { setDeliveryLocation(null); setAddress(''); }}
+                        className="text-[10px] font-black text-red-500 hover:bg-red-50 px-2 py-1 rounded-lg"
+                      >
+                        RE-SCAN
+                      </button>
+                    </div>
+                    <p className="text-sm font-black text-gray-900 font-mono tracking-tighter">
+                      LAT: {deliveryLocation.lat}
+                    </p>
+                    <p className="text-sm font-black text-gray-900 font-mono tracking-tighter mt-1">
+                      LNG: {deliveryLocation.lng}
+                    </p>
+                    <div className="mt-3 pt-3 border-t border-green-100 flex items-center gap-2">
+                       <span className="text-xs">📍</span>
+                       <p className="text-[10px] text-green-700 font-bold italic">Pin dropped precisely at your current GPS satellites position.</p>
+                    </div>
                  </div>
                ) : (
                  <button
                    type="button"
-                   onClick={() => {
-                     if (!navigator.geolocation) {
-                       setLocationStatus('GPS not supported');
-                       return;
-                     }
-                     setLocationStatus('Locating you...');
-                     navigator.geolocation.getCurrentPosition(
-                       (pos) => {
-                         const lat = pos.coords.latitude;
-                         const lng = pos.coords.longitude;
-                         setDeliveryLocation({ lat, lng });
-                         setLocationStatus('');
-                         if (!address) setAddress(`GPS: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
-                       },
-                       (err) => setLocationStatus(`Error: ${err.message}`),
-                       { enableHighAccuracy: true }
-                     );
-                   }}
-                   className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl hover:bg-indigo-700 transition-all shadow-lg active:scale-[0.98]"
+                   onClick={captureLocation}
+                   className="w-full bg-indigo-600 text-white font-black py-5 rounded-2xl hover:bg-indigo-700 transition-all shadow-xl active:scale-[0.98] group flex items-center justify-center gap-3"
                  >
-                   {locationStatus ? locationStatus : '🌐 Detect My Current Location'}
+                   {locationStatus ? (
+                     <>
+                       <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                       <span>{locationStatus}</span>
+                     </>
+                   ) : (
+                     <>
+                       <span>🛰️</span>
+                       <span>GET MY REAL LOCATION NOW</span>
+                     </>
+                   )}
                  </button>
                )}
              </div>
@@ -171,15 +205,18 @@ export default function CheckoutPage() {
                value={address}
                onChange={(e) => setAddress(e.target.value)}
                placeholder="Enter detailed delivery address (e.g. House No, Area, Landmark)"
-               className="w-full rounded-2xl border border-gray-100 bg-gray-50 px-5 py-4 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition-all text-sm h-32"
+               className="w-full rounded-2xl border border-gray-100 bg-gray-50 px-5 py-4 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition-all text-sm h-32 font-medium"
                required
              />
-             {!deliveryLocation && (
-               <div className="mt-4 p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-center gap-3">
-                 <span className="text-xl">⚠️</span>
-                 <p className="text-xs text-amber-900 font-bold leading-relaxed">
-                   Without GPS capture, tracking will be limited. Please use the button above.
-                 </p>
+             {!deliveryLocation && !locationStatus && (
+               <div className="mt-4 p-5 bg-amber-50 border border-amber-100 rounded-[1.5rem] flex items-start gap-3">
+                 <span className="text-xl">💡</span>
+                 <div>
+                   <p className="text-xs text-amber-900 font-black mb-1">PRO-TIP FOR BANGALORE USERS</p>
+                   <p className="text-[11px] text-amber-800 font-medium leading-relaxed">
+                     If your phone shows Hyderabad, your browser is using its cache. Click the button above and **Wait 5 Seconds** for the real satellite signal to lock onto Bangalore!
+                   </p>
+                 </div>
                </div>
              )}
           </div>

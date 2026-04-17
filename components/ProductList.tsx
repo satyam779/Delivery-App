@@ -9,7 +9,7 @@ import ProductCard from './ProductCard';
 const fallbackProducts: Product[] = [
   // Food Items
   { id: '1', name: 'Egg Puff', description: 'Spicy egg puff with crispy pastry', price: 30, category: 'Snacks', image_url: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=800&q=80', created_at: '', updated_at: '' },
-  { id: '2', name: 'Biryani', description: 'Aromatic Hyderabadi chicken biryani', price: 150, category: 'Main Course', image_url: 'https://images.unsplash.com/photo-1563379091339-03b1cbb8e4c8?auto=format&fit=crop&w=800&q=80', created_at: '', updated_at: '' },
+  { id: '2', name: 'Biryani', description: 'Aromatic chicken biryani with premium spices', price: 150, category: 'Main Course', image_url: 'https://images.unsplash.com/photo-1563379091339-03b1cbb8e4c8?auto=format&fit=crop&w=800&q=80', created_at: '', updated_at: '' },
   { id: '3', name: 'Cool Drinks', description: 'Refreshing chilled beverages', price: 20, category: 'Drinks', image_url: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=800&q=80', created_at: '', updated_at: '' },
   { id: '4', name: 'Chicken Burger', description: 'Crispy chicken breast with fresh veggies', price: 100, category: 'Fast Food', image_url: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80', created_at: '', updated_at: '' },
   { id: '5', name: 'Caesar Salad', description: 'Fresh lettuce with parmesan and croutons', price: 150, category: 'Healthy', image_url: 'https://images.unsplash.com/photo-1550304943-4f24f54ddde9?auto=format&fit=crop&w=800&q=80', created_at: '', updated_at: '' },

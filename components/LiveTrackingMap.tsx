@@ -6,20 +6,27 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { Delivery } from '@/lib/types';
 
-// Custom Markers with better styling
+// Use standard icons to ensure visibility
 const bikeIcon = L.icon({
-  iconUrl: '/bike-marker.png',
-  iconSize: [42, 42],
-  iconAnchor: [21, 21],
-  popupAnchor: [0, -21],
+  iconUrl: 'https://cdn-icons-png.flaticon.com/512/3198/3198336.png', // Delivery bike icon
+  iconSize: [40, 40],
+  iconAnchor: [20, 20],
+  popupAnchor: [0, -20],
+});
+
+const deliveryMarkerIcon = L.icon({
+  iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png', // Standard red pin
+  iconSize: [40, 40],
+  iconAnchor: [20, 40],
+  popupAnchor: [0, -40],
 });
 
 const destinationIcon = L.divIcon({
-  html: `<div class="destination-pulse">
-          <div class="main-marker">📍</div>
-          <div class="pulse-ring"></div>
+  html: `<div class="destination-marker-wrapper">
+          <div class="main-pin">📍</div>
+          <div class="pulse-effect"></div>
         </div>`,
-  className: 'custom-div-icon',
+  className: 'custom-leaflet-icon',
   iconSize: [40, 40],
   iconAnchor: [20, 20],
 });
