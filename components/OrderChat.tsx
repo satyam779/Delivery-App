@@ -44,7 +44,7 @@ export default function OrderChat({ orderId, recipientName, currentUserId, isOpe
           table: 'messages',
           filter: `order_id=eq.${orderId}`,
         },
-        (payload) => {
+        (payload: any) => {
           const msg = payload.new as Message;
           setMessages((prev) => {
             // Merging optimistic message
