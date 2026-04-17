@@ -69,13 +69,23 @@ function appReducer(state: AppState, action: AppAction): AppState {
 const AppContext = createContext<{
   state: AppState;
   dispatch: React.Dispatch<AppAction>;
+  addToCart: (product: any, quantity?: number) => void;
+  removeFromCart: (productId: string) => void;
 } | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
+  const addToCart = (product: any, quantity: number = 1) => {
+    dispatch({ type: 'ADD_TO_CART', payload: { product, quantity } });
+  };
+
+  const removeFromCart = (productId: string) => {
+    dispatch({ type: 'REMOVE_FROM_CART', payload: productId });
+  };
+
   return (
-    <AppContext.Provider value={{ state, dispatch }}>
+    <AppContext.Provider value={{ state, dispatch, addToCart, removeFromCart }}>
       {children}
     </AppContext.Provider>
   );

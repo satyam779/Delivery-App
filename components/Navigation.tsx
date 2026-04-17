@@ -15,7 +15,19 @@ export default function Navigation() {
   useEffect(() => {
     const getUser = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error) {
+          // If refresh token is invalid/not found, force a clean state
+          if (error.message.includes('Refresh Token') || error.status === 401) {
+            console.warn('Session expired or invalid, signing out...');
+            await supabase.auth.signOut();
+            dispatch({ type: 'SET_USER', payload: null });
+            return;
+          }
+          throw error;
+        }
+
         if (user) {
           dispatch({
             type: 'SET_USER',
@@ -27,7 +39,7 @@ export default function Navigation() {
           });
         }
       } catch (error) {
-        console.warn('Failed to initialize auth user:', error);
+        console.warn('Auth initialization skipped:', error);
       }
     };
     getUser();
@@ -81,6 +93,9 @@ export default function Navigation() {
             <div className="hidden items-baseline space-x-2 md:ml-6 md:flex">
               <Link href="/products" className="rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-100">
                 Products
+              </Link>
+              <Link href="/grocery" className="rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-100">
+                Grocery
               </Link>
               {state.user && (
                 <Link href="/orders" className="rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-100">
@@ -148,6 +163,13 @@ export default function Navigation() {
                 className="rounded-xl bg-orange-50 px-4 py-3 text-sm font-medium text-black transition hover:bg-orange-100"
               >
                 Products
+              </Link>
+              <Link
+                href="/grocery"
+                onClick={() => setIsMenuOpen(false)}
+                className="rounded-xl bg-orange-50 px-4 py-3 text-sm font-medium text-black transition hover:bg-orange-100"
+              >
+                Grocery
               </Link>
               {state.user && (
                 <Link

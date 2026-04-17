@@ -12,16 +12,19 @@ export interface Product {
 export interface Order {
   id: string;
   user_id: string;
+  agent_id?: string | null;
   status: 'pending' | 'accepted' | 'in_progress' | 'completed' | 'cancelled';
   total_amount: number;
   delivery_address?: string;
   delivery_lat?: number;
   delivery_lng?: number;
+  current_lat?: number;
+  current_lng?: number;
+  assigned_at?: string;
   created_at: string;
   updated_at: string;
   items?: OrderItem[];
   order_items?: OrderItem[];
-  delivery?: Delivery | null;
 }
 
 export interface OrderItem {
@@ -33,17 +36,10 @@ export interface OrderItem {
   product?: Product;
 }
 
-export interface Delivery {
-  id: string;
-  order_id: string;
-  agent_id: string;
-  status: 'assigned' | 'in_progress' | 'completed';
-  current_lat?: number;
-  current_lng?: number;
-  created_at: string;
-  updated_at: string;
-  order?: Order;
+export interface Delivery extends Order {
+  // Shared type for agent view
 }
+
 
 export interface CartItem {
   product: Product;

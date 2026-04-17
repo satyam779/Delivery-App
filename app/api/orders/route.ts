@@ -23,7 +23,6 @@ export async function GET(request: NextRequest) {
 
     let query = supabaseAdmin.from('orders').select(`
       *,
-      deliveries (*),
       order_items (*, products (*))
     `);
 
@@ -41,12 +40,7 @@ export async function GET(request: NextRequest) {
       throw error;
     }
 
-    const normalized = (data || []).map((order: any) => ({
-      ...order,
-      delivery: order.deliveries?.[0] ?? null,
-    }));
-
-    return NextResponse.json({ data: normalized });
+    return NextResponse.json({ data: data || [] });
   } catch (error: any) {
     console.error('Orders API error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

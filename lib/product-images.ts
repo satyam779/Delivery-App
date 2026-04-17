@@ -40,5 +40,6 @@ export function getProductImageUrl(product: Pick<Product, 'name' | 'category' | 
     return categoryMatch;
   }
 
-  return '/product-card-placeholder.svg';
+  // Final fallback to a high-quality generic food placeholder
+  return 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80';
 }
