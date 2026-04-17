@@ -33,10 +33,15 @@ export default function OrderChat({ orderId, recipientName, currentUserId, isOpe
 
     fetchMessages();
 
-    // Subscribe to all message changes for this app session
-    // We will filter in-app to ensure 100% reliability
+    // Create a high-speed broadcast channel for instant delivery
     const channel = supabase
-      .channel(`chat_global_${orderId}`)
+      .channel(`chat_${orderId}`, {
+        config: {
+          broadcast: { self: false },
+          presence: { key: currentUserId }
+        }
+      })
+      // 1. Listen for Database Inserts (for history sync)
       .on(
         'postgres_changes',
         {
@@ -46,34 +51,40 @@ export default function OrderChat({ orderId, recipientName, currentUserId, isOpe
         },
         (payload: any) => {
           const msg = payload.new as Message;
-          
-          // Verify it belongs to this order
           if (msg.order_id !== orderId) return;
-          
-          console.log("Realtime message received:", msg);
-
-          setMessages((prev) => {
-            // Merging optimistic message
-            const existingOptIdx = prev.findIndex(p => p.text === msg.text && p.sender_id === msg.sender_id && p.id.toString().startsWith('0.'));
-            if (existingOptIdx !== -1) {
-              const next = [...prev];
-              next[existingOptIdx] = msg;
-              return next;
-            }
-            if (prev.some(p => p.id === msg.id)) return prev;
-            return [...prev, msg];
-          });
+          console.log("DB Realtime received:", msg);
+          addMessage(msg);
+        }
+      )
+      // 2. Listen for Direct Broadcasts (Visual speed lane)
+      .on(
+        'broadcast',
+        { event: 'msg' },
+        (payload: any) => {
+          console.log("Broadcast speed-lane received:", payload.payload);
+          addMessage(payload.payload as Message);
         }
       )
       .subscribe((status: string) => {
-        console.log(`Supabase Realtime Status: ${status}`);
         setIsConnected(status === 'SUBSCRIBED');
       });
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [isOpen, orderId]);
+  }, [isOpen, orderId, currentUserId]);
+
+  const addMessage = (msg: Message) => {
+    setMessages((prev) => {
+      // Intelligently merge optimistic or broadcast messages with DB messages
+      const isDuplicate = prev.some(p => p.id === msg.id || (p.text === msg.text && p.sender_id === msg.sender_id && p.id.toString().startsWith('0.')));
+      if (isDuplicate) {
+        // If we find an optimistic version, replace it with the real one
+        return prev.map(p => (p.text === msg.text && p.sender_id === msg.sender_id && p.id.toString().startsWith('0.')) ? msg : p);
+      }
+      return [...prev, msg];
+    });
+  };
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -106,26 +117,35 @@ export default function OrderChat({ orderId, recipientName, currentUserId, isOpe
     setNewMessage('');
 
     try {
-      // Optimistic update
       const tempId = Math.random().toString();
-      const optimisticMsg: Message = {
+      const msgData: Message = {
         id: tempId,
         order_id: orderId,
         sender_id: currentUserId,
         text: messageText,
         created_at: new Date().toISOString()
       };
-      setMessages(prev => [...prev, optimisticMsg]);
 
-      const { error } = await supabase.from('messages').insert({
+      // 1. Optimistic Update (Instant for Sender)
+      setMessages(prev => [...prev, msgData]);
+
+      // 2. Broadcast (Instant for Receiver)
+      supabase.channel(`chat_${orderId}`).send({
+        type: 'broadcast',
+        event: 'msg',
+        payload: msgData
+      });
+
+      // 3. Persist to DB
+      const { data, error } = await supabase.from('messages').insert({
         order_id: orderId,
         sender_id: currentUserId,
         text: messageText,
-      });
+      }).select().single();
 
       if (error) {
-         setMessages(prev => prev.filter(m => m.id !== tempId));
-         throw error;
+        setMessages(prev => prev.filter(m => m.id !== tempId));
+        throw error;
       }
     } catch (err: any) {
       console.error('Failed to send message:', err.message);
