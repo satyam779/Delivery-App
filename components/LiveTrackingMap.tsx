@@ -181,40 +181,40 @@ export default function LiveTrackingMap({
   return (
     <div className="relative group overflow-hidden rounded-[3.5rem] bg-white border-8 border-white shadow-[0_45px_100px_-25px_rgba(0,0,0,0.2)] mt-8">
       {/* 🚀 Dynamic Premium HUD */}
-      <div className="absolute top-8 left-8 right-8 z-[1000] flex flex-col md:flex-row justify-between gap-4 pointer-events-none">
-        <div className="bg-white/90 backdrop-blur-2xl px-6 py-5 rounded-[2.5rem] shadow-2xl border border-white/40 flex items-center gap-5 transition-transform group-hover:scale-105 duration-500">
+      <div className="absolute top-3 md:top-8 left-3 md:left-8 right-3 md:right-8 z-[1000] flex flex-col sm:flex-row justify-between gap-3 pointer-events-none">
+        <div className="bg-white/95 backdrop-blur-2xl px-4 md:px-6 py-3 md:py-5 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl border border-white/40 flex items-center gap-3 md:gap-5 transition-transform group-hover:scale-105 duration-500">
           <div className="relative">
             <div className="absolute inset-0 bg-blue-500 blur-xl opacity-20 animate-pulse"></div>
-            <div className="relative w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-700 rounded-3xl flex items-center justify-center text-2xl shadow-xl">🛵</div>
+            <div className="relative w-10 h-10 md:w-14 md:h-14 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl md:rounded-3xl flex items-center justify-center text-xl md:text-2xl shadow-xl">🛵</div>
           </div>
           <div>
-            <p className="text-[10px] font-black text-blue-500/60 uppercase tracking-widest leading-none mb-2">Live Tracking</p>
-            <div className="flex items-center gap-3">
-              <span className="flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+            <p className="text-[9px] md:text-[10px] font-black text-blue-500/60 uppercase tracking-widest leading-none mb-1 md:mb-2 text-nowrap">Live Tracking</p>
+            <div className="flex items-center gap-2 md:gap-3">
+              <span className="flex h-2 w-2 md:h-3 md:w-3">
+                <span className="animate-ping absolute inline-flex h-2 w-2 md:h-3 md:w-3 rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 md:h-3 md:w-3 bg-green-500"></span>
               </span>
-              <p className="text-lg font-black text-slate-900 leading-none">Vehicle En Route</p>
+              <p className="text-sm md:text-lg font-black text-slate-900 leading-none">Driver En Route</p>
             </div>
           </div>
         </div>
 
-        <div className="flex gap-4">
-          <div className="bg-slate-900/95 backdrop-blur-2xl px-8 py-5 rounded-[2.5rem] shadow-2xl flex items-center gap-8 border border-slate-800">
+        <div className="flex gap-2 sm:gap-4">
+          <div className="bg-slate-900/95 backdrop-blur-2xl px-5 md:px-8 py-3 md:py-5 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl flex items-center gap-4 md:gap-8 border border-slate-800">
             <div className="text-center">
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">ETA</p>
-              <p className="text-2xl font-black text-white leading-none">{eta}<span className="text-xs ml-1 text-slate-400">MIN</span></p>
+              <p className="text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 md:mb-2">ETA</p>
+              <p className="text-lg md:text-2xl font-black text-white leading-none">{eta}<span className="text-[10px] ml-1 text-slate-400 italic">MIN</span></p>
             </div>
-            <div className="w-[1px] h-10 bg-slate-700"></div>
+            <div className="w-[1px] h-6 md:h-10 bg-slate-700"></div>
             <div className="text-center">
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Distance</p>
-              <p className="text-2xl font-black text-white leading-none">{distance}<span className="text-xs ml-1 text-slate-400">KM</span></p>
+              <p className="text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 md:mb-2">Distance</p>
+              <p className="text-lg md:text-2xl font-black text-white leading-none">{distance}<span className="text-[10px] ml-1 text-slate-400 italic">KM</span></p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="h-[600px] w-full">
+      <div className="h-[450px] md:h-[600px] w-full relative">
         <MapContainer
           center={currentPosition}
           zoom={16}

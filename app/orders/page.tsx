@@ -66,7 +66,7 @@ export default function OrdersPage() {
           table: 'orders',
           filter: `user_id=eq.${state.user.id}`,
         },
-        (payload) => {
+        (payload: any) => {
           const updatedOrder = payload.new as Order;
           setOrders((prev) => 
             prev.map((o) => (o.id === updatedOrder.id ? { ...o, ...updatedOrder } : o))
