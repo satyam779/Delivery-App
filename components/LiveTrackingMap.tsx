@@ -10,7 +10,7 @@ import { Delivery } from '@/lib/types';
 const createBikeIcon = (rotation: number) => L.divIcon({
   html: `<div class="bike-container" style="transform: rotate(${rotation}deg);">
           <div class="bike-glow"></div>
-          <img src="https://cdn-icons-png.flaticon.com/512/3198/3198336.png" class="bike-img" />
+          <img src="https://cdn-icons-png.flaticon.com/512/4845/4845772.png" class="bike-img" />
         </div>`,
   className: 'custom-bike-icon',
   iconSize: [48, 48],
@@ -39,7 +39,7 @@ function MapCameraController({ agentPos, destinationPos, route }: { agentPos: [n
     lastUpdate.current = now;
 
     map.invalidateSize();
-    
+
     const dLat = Math.abs(agentPos[0] - destinationPos[0]);
     const dLng = Math.abs(agentPos[1] - destinationPos[1]);
     const distance = Math.sqrt(dLat * dLat + dLng * dLng);
@@ -48,11 +48,11 @@ function MapCameraController({ agentPos, destinationPos, route }: { agentPos: [n
     // If agent is close (< 800m), zoom in for street-level tracking
     // If agent is far, show the full route
     if (distance < 0.005) {
-       map.setView(agentPos, 17, { animate: true, duration: 1.5 });
+      map.setView(agentPos, 17, { animate: true, duration: 1.5 });
     } else {
-       const bounds = L.latLngBounds([agentPos, destinationPos]);
-       if (route.length > 0) route.forEach(p => bounds.extend(p));
-       map.fitBounds(bounds, { padding: [100, 100], animate: true, duration: 1.5 });
+      const bounds = L.latLngBounds([agentPos, destinationPos]);
+      if (route.length > 0) route.forEach(p => bounds.extend(p));
+      map.fitBounds(bounds, { padding: [100, 100], animate: true, duration: 1.5 });
     }
   }, [agentPos, destinationPos, route, map]);
 
@@ -127,7 +127,7 @@ export default function LiveTrackingMap({
   // 🏎️ Ultra-Smooth Glide Movement
   useEffect(() => {
     if (!simulateMovement || currentPosition[0] === 0 || routeCoordinates.length < 2) return;
-    
+
     let index = 0;
     const interval = setInterval(() => {
       if (index < routeCoordinates.length - 1) {
@@ -135,7 +135,7 @@ export default function LiveTrackingMap({
         const p1 = routeCoordinates[index - 1];
         const p2 = routeCoordinates[index];
         setRotation(calculateBearing(p1, p2));
-        
+
         // Use shorter steps or more frequent updates for "continuous" feel
         setCurrentPosition(p2);
         onLocationUpdate(p2[0], p2[1]);
@@ -143,7 +143,7 @@ export default function LiveTrackingMap({
         clearInterval(interval);
       }
     }, 1200); // Faster interval for "Gliding" feel
-    
+
     return () => clearInterval(interval);
   }, [simulateMovement, routeCoordinates, onLocationUpdate]);
 
@@ -206,46 +206,46 @@ export default function LiveTrackingMap({
             url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png"
             attribution='&copy; CARTO'
           />
-          
+
           {routeCoordinates.length > 0 && (
             <>
-              <Polyline 
-                positions={routeCoordinates} 
-                pathOptions={{ color: '#3B82F6', weight: 10, opacity: 0.1, lineCap: 'round' }} 
+              <Polyline
+                positions={routeCoordinates}
+                pathOptions={{ color: '#3B82F6', weight: 10, opacity: 0.1, lineCap: 'round' }}
               />
-              <Polyline 
-                positions={routeCoordinates} 
-                pathOptions={{ color: '#2563EB', weight: 5, opacity: 0.9, lineCap: 'round', lineJoin: 'round', dashArray: '1, 15', dashOffset: '10' }} 
+              <Polyline
+                positions={routeCoordinates}
+                pathOptions={{ color: '#2563EB', weight: 5, opacity: 0.9, lineCap: 'round', lineJoin: 'round', dashArray: '1, 15', dashOffset: '10' }}
                 className="animated-route"
               />
             </>
           )}
-          
+
           <Marker position={currentPosition} icon={createBikeIcon(rotation)}>
-             <Popup closeButton={false} className="ultra-popup">
-                <div className="flex items-center gap-3 py-1">
-                   <div className="w-10 h-10 bg-blue-100 rounded-2xl flex items-center justify-center text-lg shadow-sm">🚀</div>
-                   <div>
-                     <p className="text-[10px] font-black text-slate-400 uppercase leading-none mb-1">Status</p>
-                     <p className="text-sm font-black text-slate-900 leading-none">Moving Fast</p>
-                   </div>
+            <Popup closeButton={false} className="ultra-popup">
+              <div className="flex items-center gap-3 py-1">
+                <div className="w-10 h-10 bg-blue-100 rounded-2xl flex items-center justify-center text-lg shadow-sm">🚀</div>
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase leading-none mb-1">Status</p>
+                  <p className="text-sm font-black text-slate-900 leading-none">Moving Fast</p>
                 </div>
-             </Popup>
+              </div>
+            </Popup>
           </Marker>
 
           <Marker position={destinationPosition || currentPosition} icon={destinationIcon}>
-             <Popup closeButton={false} className="ultra-popup">
-                <div className="text-center py-1">
-                   <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-2">Delivery At</p>
-                   <p className="text-sm font-bold text-slate-700 leading-snug">{destinationAddress ?? 'Destination Point'}</p>
-                </div>
-             </Popup>
+            <Popup closeButton={false} className="ultra-popup">
+              <div className="text-center py-1">
+                <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-2">Delivery At</p>
+                <p className="text-sm font-bold text-slate-700 leading-snug">{destinationAddress ?? 'Destination Point'}</p>
+              </div>
+            </Popup>
           </Marker>
 
-          <MapCameraController 
-            agentPos={currentPosition} 
-            destinationPos={destinationPosition || currentPosition} 
-            route={routeCoordinates} 
+          <MapCameraController
+            agentPos={currentPosition}
+            destinationPos={destinationPosition || currentPosition}
+            route={routeCoordinates}
           />
         </MapContainer>
       </div>
