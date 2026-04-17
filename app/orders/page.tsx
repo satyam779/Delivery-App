@@ -234,8 +234,6 @@ export default function OrdersPage() {
                         : undefined
                     }
                     onLocationUpdate={() => { }}
-                    isAgent={false}
-                    simulateMovement={false}
                   />
                 </div>
               ) : selectedOrder.status === 'completed' ? (
