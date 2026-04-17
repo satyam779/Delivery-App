@@ -78,9 +78,9 @@ export default function ProductList({ category }: { category?: string }) {
       let finalProducts = data && data.length > 0 ? data : fallbackProducts;
       
       if (category) {
-        finalProducts = finalProducts.filter(p => p.category === category);
+        finalProducts = finalProducts.filter((p: Product) => p.category === category);
       } else {
-        finalProducts = finalProducts.filter(p => p.category !== 'Grocery');
+        finalProducts = finalProducts.filter((p: Product) => p.category !== 'Grocery');
       }
 
       setProducts(applyProductCardImages(finalProducts));
@@ -88,9 +88,9 @@ export default function ProductList({ category }: { category?: string }) {
       console.warn('Error fetching products, using fallback:', error);
       let finalFallback = fallbackProducts;
       if (category) {
-        finalFallback = fallbackProducts.filter(p => p.category === category);
+        finalFallback = fallbackProducts.filter((p: Product) => p.category === category);
       } else {
-        finalFallback = fallbackProducts.filter(p => p.category !== 'Grocery');
+        finalFallback = fallbackProducts.filter((p: Product) => p.category !== 'Grocery');
       }
       setProducts(applyProductCardImages(finalFallback));
     } finally {
