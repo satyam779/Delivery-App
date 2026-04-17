@@ -75,7 +75,6 @@ export default function LiveTrackingMap({
   onLocationUpdate: (lat: number, lng: number) => void;
   isAgent?: boolean;
 }) {
-  const { supabase } = useApp() as any; // We'll need this for broadcasting
   const [currentPosition, setCurrentPosition] = useState<[number, number]>(() => {
     if (delivery.current_lat && delivery.current_lng) return [delivery.current_lat, delivery.current_lng];
     if (destinationCoordinates && destinationCoordinates[0] !== 0) return [destinationCoordinates[0] - 0.005, destinationCoordinates[1] - 0.005];
