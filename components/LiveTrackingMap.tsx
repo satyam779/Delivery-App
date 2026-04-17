@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { supabase } from '@/lib/supabase';
 import { Delivery } from '@/lib/types';
 
 // ✨ Premium Animations & Icons
@@ -65,13 +66,16 @@ export default function LiveTrackingMap({
   destinationCoordinates,
   simulateMovement = false,
   onLocationUpdate,
+  isAgent = false,
 }: {
   delivery: Delivery;
   orderAddress?: string;
   destinationCoordinates?: [number, number];
   simulateMovement?: boolean;
   onLocationUpdate: (lat: number, lng: number) => void;
+  isAgent?: boolean;
 }) {
+  const { supabase } = useApp() as any; // We'll need this for broadcasting
   const [currentPosition, setCurrentPosition] = useState<[number, number]>(() => {
     if (delivery.current_lat && delivery.current_lng) return [delivery.current_lat, delivery.current_lng];
     if (destinationCoordinates && destinationCoordinates[0] !== 0) return [destinationCoordinates[0] - 0.005, destinationCoordinates[1] - 0.005];
@@ -124,41 +128,65 @@ export default function LiveTrackingMap({
     }
   }, [delivery.current_lat, delivery.current_lng]);
 
-  // 🏎️ CONTINUOUS UPDATES: Real GPS Tracking with zero caching
+  // 🏎️ DUAL-MODE TRACKING: 
+  // Agents BROADCAST their location | Customers LISTEN for broadcasts
   useEffect(() => {
-    if (simulateMovement || !navigator.geolocation) return;
+    const channel = supabase.channel(`gps_${delivery.id}`);
+
+    if (!isAgent) {
+      // MODE: CUSTOMER (Passive Listening)
+      channel.on('broadcast', { event: 'loc' }, (payload: any) => {
+        const { lat, lng, rot } = payload.payload;
+        setCurrentPosition([lat, lng]);
+        if (rot !== undefined) setRotation(rot);
+      }).subscribe();
+    } else {
+      // MODE: AGENT (Active Watching & Broadcasting)
+      channel.subscribe();
+    }
 
     let lastUpdateAt = 0;
-    const watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        const { latitude, longitude, heading } = pos.coords;
-        const now = Date.now();
-        
-        // Update local map position immediately for agent
-        setCurrentPosition(prev => {
-          if (prev[0] !== 0) {
-             const newRotation = calculateBearing(prev, [latitude, longitude]);
-             if (newRotation !== 0) setRotation(newRotation);
-          }
-          return [latitude, longitude];
-        });
+    const watchId = isAgent && !simulateMovement && typeof navigator !== 'undefined' && navigator.geolocation 
+      ? navigator.geolocation.watchPosition(
+          (pos) => {
+            const { latitude, longitude } = pos.coords;
+            const now = Date.now();
+            
+            let newRot = rotation;
+            setCurrentPosition(prev => {
+              if (prev[0] !== 0) {
+                 const calcRot = calculateBearing(prev, [latitude, longitude]);
+                 if (calcRot !== 0) {
+                   setRotation(calcRot);
+                   newRot = calcRot;
+                 }
+              }
+              return [latitude, longitude];
+            });
 
-        // Throttle database updates slightly to 800ms for stability but high accuracy
-        if (now - lastUpdateAt > 800) {
-          onLocationUpdate(latitude, longitude);
-          lastUpdateAt = now;
-        }
-      },
-      (err) => console.warn('Real-time tracking error:', err),
-      {
-        enableHighAccuracy: true,
-        maximumAge: 0, // Force fresh location every second
-        timeout: 10000,
-      }
-    );
+            // 1. FAST BROADCAST (Every move)
+            channel.send({
+              type: 'broadcast',
+              event: 'loc',
+              payload: { lat: latitude, lng: longitude, rot: newRot }
+            });
 
-    return () => navigator.geolocation.clearWatch(watchId);
-  }, [simulateMovement, onLocationUpdate]);
+            // 2. THROTTLED DB UPDATE (Consistency)
+            if (now - lastUpdateAt > 2000) {
+              onLocationUpdate(latitude, longitude);
+              lastUpdateAt = now;
+            }
+          },
+          (err) => console.warn('GPS Error:', err),
+          { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+        ) 
+      : null;
+
+    return () => {
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+      supabase.removeChannel(channel);
+    };
+  }, [simulateMovement, isAgent, delivery.id]);
 
   // 🏎️ Ultra-Smooth Glide Movement (SIMULATION MODE)
   useEffect(() => {

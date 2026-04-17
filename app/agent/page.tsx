@@ -301,7 +301,8 @@ export default function AgentPage() {
                        ? [selectedOrder.delivery_lat, selectedOrder.delivery_lng]
                        : undefined
                    }
-                   simulateMovement={true}
+                   isAgent={true}
+                   simulateMovement={false}
                    onLocationUpdate={(lat, lng) => updateLocation(selectedOrder.id, lat, lng)}
                  />
               </div>
