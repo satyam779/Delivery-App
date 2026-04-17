@@ -33,19 +33,25 @@ export default function OrderChat({ orderId, recipientName, currentUserId, isOpe
 
     fetchMessages();
 
-    // Subscribe to new messages with improved fault tolerance
+    // Subscribe to all message changes for this app session
+    // We will filter in-app to ensure 100% reliability
     const channel = supabase
-      .channel(`chat_${orderId}`)
+      .channel(`chat_global_${orderId}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'messages',
-          filter: `order_id=eq.${orderId}`,
         },
         (payload: any) => {
           const msg = payload.new as Message;
+          
+          // Verify it belongs to this order
+          if (msg.order_id !== orderId) return;
+          
+          console.log("Realtime message received:", msg);
+
           setMessages((prev) => {
             // Merging optimistic message
             const existingOptIdx = prev.findIndex(p => p.text === msg.text && p.sender_id === msg.sender_id && p.id.toString().startsWith('0.'));
@@ -60,6 +66,7 @@ export default function OrderChat({ orderId, recipientName, currentUserId, isOpe
         }
       )
       .subscribe((status: string) => {
+        console.log(`Supabase Realtime Status: ${status}`);
         setIsConnected(status === 'SUBSCRIBED');
       });
 
@@ -128,32 +135,39 @@ export default function OrderChat({ orderId, recipientName, currentUserId, isOpe
   if (!isOpen) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-[2000] w-80 md:w-96 bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-gray-100 flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 duration-300">
-      <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 p-6 flex items-center justify-between">
+    <div className="fixed inset-x-4 bottom-4 md:inset-auto md:bottom-6 md:right-6 z-[2000] md:w-96 bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-gray-100 flex flex-col overflow-hidden animate-in slide-in-from-bottom-10 duration-500 ease-out">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 p-5 md:p-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="w-10 h-10 bg-white/20 rounded-2xl flex items-center justify-center text-white text-xl">👤</div>
+            <div className="w-10 h-10 md:w-11 md:h-11 bg-white/20 rounded-2xl flex items-center justify-center text-white text-xl">👤</div>
             {isConnected && (
-              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 border-2 border-indigo-600 rounded-full animate-pulse"></div>
+              <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-400 border-2 border-indigo-600 rounded-full animate-pulse shadow-sm"></div>
             )}
           </div>
           <div>
-            <p className="text-white font-black leading-tight">{recipientName}</p>
-            <p className="text-indigo-200 text-[10px] font-black uppercase tracking-widest">{isConnected ? 'Live' : 'Connecting...'}</p>
+            <p className="text-white font-black leading-tight text-sm md:text-base">{recipientName}</p>
+            <p className="text-indigo-200 text-[9px] md:text-[10px] font-black uppercase tracking-widest">{isConnected ? 'Online' : 'Connecting...'}</p>
           </div>
         </div>
-        <button onClick={onClose} className="text-white/60 hover:text-white transition-colors bg-white/10 w-8 h-8 rounded-full flex items-center justify-center">✕</button>
+        <button 
+          onClick={onClose} 
+          className="text-white/60 hover:text-white transition-all bg-white/10 w-9 h-9 rounded-full flex items-center justify-center hover:bg-white/20 active:scale-90"
+        >
+          ✕
+        </button>
       </div>
 
-      <div ref={scrollRef} className="flex-1 h-80 overflow-y-auto p-6 space-y-4 bg-gray-50/50">
+      {/* Message Area */}
+      <div ref={scrollRef} className="flex-1 h-[60vh] md:h-96 overflow-y-auto p-5 md:p-6 space-y-4 bg-slate-50/40">
         {loading ? (
           <div className="h-full flex items-center justify-center">
             <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center opacity-40">
-            <span className="text-3xl mb-2">💬</span>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-tighter">Start the conversation</p>
+          <div className="h-full flex flex-col items-center justify-center text-center opacity-30">
+            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4 text-3xl">💬</div>
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">No Messages Yet</p>
           </div>
         ) : (
           messages.map((msg) => {
@@ -165,9 +179,9 @@ export default function OrderChat({ orderId, recipientName, currentUserId, isOpe
                 className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} animate-in slide-in-from-bottom-2 fade-in duration-300`}
               >
                 <div
-                  className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm font-bold shadow-sm transition-all ${
+                  className={`max-w-[85%] md:max-w-[75%] px-4 py-3 rounded-2xl text-sm font-bold shadow-sm transition-all ${
                     isMe
-                      ? 'bg-indigo-600 text-white rounded-br-none'
+                      ? 'bg-indigo-600 text-white rounded-br-none shadow-indigo-100'
                       : 'bg-white text-slate-800 border border-slate-100 rounded-bl-none'
                   }`}
                 >
@@ -182,20 +196,23 @@ export default function OrderChat({ orderId, recipientName, currentUserId, isOpe
         )}
       </div>
 
-      <form onSubmit={sendMessage} className="p-4 bg-white border-t border-gray-100 flex gap-2">
-        <input
-          type="text"
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          placeholder="Type your message..."
-          className="flex-1 bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-all font-medium"
-        />
+      {/* Input Area */}
+      <form onSubmit={sendMessage} className="p-4 md:p-5 bg-white border-t border-slate-100 flex gap-2 items-center">
+        <div className="flex-1 relative">
+          <input
+            type="text"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder="Type a message..."
+            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-all font-bold placeholder:text-slate-300"
+          />
+        </div>
         <button
           type="submit"
           disabled={!newMessage.trim()}
-          className="w-12 h-12 bg-indigo-600 text-white rounded-xl flex items-center justify-center disabled:opacity-50 transition-all hover:bg-indigo-700 active:scale-95"
+          className="w-12 h-12 md:w-14 md:h-14 bg-indigo-600 text-white rounded-2xl flex items-center justify-center disabled:opacity-50 transition-all hover:bg-indigo-700 active:scale-90 shadow-lg shadow-indigo-100"
         >
-          🚀
+          <span className="text-xl">🚀</span>
         </button>
       </form>
     </div>
