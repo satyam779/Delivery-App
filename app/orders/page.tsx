@@ -6,6 +6,7 @@ import { useApp } from '@/lib/app-context';
 import { useRouter } from 'next/navigation';
 import { Order } from '@/lib/types';
 import { formatCurrency } from '@/lib/currency';
+import OrderChat from '@/components/OrderChat';
 
 const LiveTrackingMap = dynamic(() => import('@/components/LiveTrackingMap'), {
   ssr: false,
@@ -21,6 +22,8 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [agentPhone, setAgentPhone] = useState<string | null>(null);
 
   const loadOrders = async () => {
     if (!state.user?.id) return;
@@ -30,14 +33,26 @@ export default function OrdersPage() {
       if (!response.ok) {
         throw new Error(payload.error || 'Failed to load orders');
       }
-      setOrders(payload.data || []);
+      const fetchedOrders = payload.data || [];
+      setOrders(fetchedOrders);
+
+      // Fetch agent phone if an order is active
+      const activeOrder = fetchedOrders.find((o: Order) => o.agent_id && o.status !== 'completed');
+      if (activeOrder?.agent_id) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('phone')
+          .eq('id', activeOrder.agent_id)
+          .single();
+        if (profile?.phone) setAgentPhone(profile.phone);
+      }
 
       // Update selected order if it exists in the new data
       if (selectedOrder) {
-        const updated = payload.data?.find((o: Order) => o.id === selectedOrder.id);
+        const updated = fetchedOrders.find((o: Order) => o.id === selectedOrder.id);
         if (updated) setSelectedOrder(updated);
-      } else if (payload.data?.length) {
-        setSelectedOrder(payload.data[0]);
+      } else if (fetchedOrders.length) {
+        setSelectedOrder(fetchedOrders[0]);
       }
     } catch (err: any) {
       console.warn('Error loading orders:', err);
@@ -106,6 +121,7 @@ export default function OrdersPage() {
   }
 
   return (
+    <>
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <h1 className="text-4xl font-black text-gray-900 mb-8">My Orders</h1>
 
@@ -160,6 +176,24 @@ export default function OrdersPage() {
                   ID: {selectedOrder.id}
                 </div>
               </div>
+
+              {selectedOrder.agent_id && (
+                <div className="flex flex-wrap gap-3 mb-8">
+                  <a 
+                    href={agentPhone ? `tel:${agentPhone}` : '#'} 
+                    onClick={(e) => { if (!agentPhone) { e.preventDefault(); alert('Agent has not provided a contact number yet.'); } }}
+                    className={`flex-1 min-w-[140px] ${agentPhone ? 'bg-green-600 hover:bg-green-700 shadow-green-100' : 'bg-gray-400 cursor-not-allowed'} text-white px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg`}
+                  >
+                    <span>📞</span> {agentPhone ? 'Call Agent' : 'Waiting for Number'}
+                  </a>
+                  <button 
+                    onClick={() => setIsChatOpen(true)}
+                    className="flex-1 min-w-[140px] bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
+                  >
+                    <span>💬</span> Chat with Agent
+                  </button>
+                </div>
+              )}
 
               <div className="grid gap-6 md:grid-cols-2 mb-8">
                 <div className="rounded-3xl bg-gray-50 p-6">
@@ -225,8 +259,19 @@ export default function OrdersPage() {
               <p className="text-gray-500 mt-2 max-w-[200px]">Select an order from the list to view its real-time progress.</p>
             </div>
           )}
-        </div>
       </div>
     </div>
+    </div>
+    
+    {selectedOrder && state.user && (
+      <OrderChat
+        orderId={selectedOrder.id}
+        recipientName="Delivery Agent"
+        currentUserId={state.user.id}
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+      />
+    )}
+    </>
   );
 }

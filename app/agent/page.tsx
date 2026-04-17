@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { formatCurrency } from '@/lib/currency';
 import { supabase } from '@/lib/supabase';
+import OrderChat from '@/components/OrderChat';
 
 // Helper to get agent's real GPS position
 function getAgentGPS(): Promise<[number, number] | null> {
@@ -33,6 +34,7 @@ export default function AgentPage() {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [agentPosition, setAgentPosition] = useState<[number, number] | null>(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   useEffect(() => {
     if (state.user && state.user.role === 'agent') {
@@ -161,6 +163,7 @@ export default function AgentPage() {
   }
 
   return (
+    <>
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <h1 className="text-4xl font-black text-gray-900 mb-8">Delivery Agent Portal</h1>
 
@@ -219,6 +222,48 @@ export default function AgentPage() {
                       </>
                     )}
                   </div>
+                  
+                  {/* Communication Tools */}
+                  <div className="mt-4 pt-4 border-t border-gray-50 flex gap-3">
+                    <button 
+                      onClick={async () => {
+                        let customerPhone = '9876543210'; // Fallback
+                        
+                        // 1. Check/Ask for AGENT'S phone number (to reflect in User UI)
+                        const { data: agentProfile } = await supabase.from('profiles').select('phone').eq('id', state.user?.id).single();
+                        if (!agentProfile?.phone) {
+                          const agentInput = prompt("Your phone number is missing from your profile. Enter it so the customer can call you back if needed:");
+                          if (agentInput) {
+                            await supabase.from('profiles').update({ phone: agentInput }).eq('id', state.user?.id);
+                          }
+                        }
+
+                        // 2. Check/Ask for CUSTOMER'S phone number (to perform the call)
+                        const { data: customerProfile } = await supabase.from('profiles').select('phone').eq('id', order.user_id).single();
+                        if (!customerProfile?.phone) {
+                          const customerInput = prompt("Customer's phone number is missing. Please enter it to call them:");
+                          if (customerInput) {
+                            customerPhone = customerInput;
+                            await supabase.from('profiles').update({ phone: customerInput }).eq('id', order.user_id);
+                          } else return;
+                        } else {
+                          customerPhone = customerProfile.phone;
+                        }
+
+                        // 3. Initiate the call
+                        window.location.href = `tel:${customerPhone}`;
+                      }}
+                      className="text-xs font-bold text-green-600 hover:text-green-700 flex items-center gap-1"
+                    >
+                      📞 Call
+                    </button>
+                    <button 
+                      onClick={() => { setSelectedOrder(order); setIsChatOpen(true); }}
+                      className="text-xs font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
+                    >
+                      💬 Chat
+                    </button>
+                  </div>
                 </div>
               ))
             )}
@@ -273,5 +318,16 @@ export default function AgentPage() {
         </div>
       </div>
     </div>
+
+    {selectedOrder && state.user && (
+      <OrderChat
+        orderId={selectedOrder.id}
+        recipientName="Customer"
+        currentUserId={state.user.id}
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+      />
+    )}
+    </>
   );
 }
