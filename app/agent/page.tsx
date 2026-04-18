@@ -39,9 +39,33 @@ export default function AgentPage() {
   useEffect(() => {
     if (state.user && state.user.role === 'agent') {
       fetchOrders();
-      // Fast refresh for agents to catch new assignments
-      const interval = setInterval(fetchOrders, 6000);
-      return () => clearInterval(interval);
+      
+      // Real-time subscription for instant task and location updates
+      const channel = supabase
+        .channel('agent:orders')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'orders',
+            filter: `agent_id=eq.${state.user.id}`,
+          },
+          (payload: any) => {
+            const updatedOrder = payload.new as Order;
+            setOrders((prev) => {
+              const exists = prev.some((o) => o.id === updatedOrder.id);
+              if (!exists) {
+                fetchOrders(); // Refetch if it's a newly assigned order
+                return prev;
+              }
+              return prev.map((o) => (o.id === updatedOrder.id ? { ...o, ...updatedOrder } : o));
+            });
+          }
+        )
+        .subscribe();
+
+      return () => { supabase.removeChannel(channel); };
     }
   }, [state.user]);
 
@@ -93,6 +117,9 @@ export default function AgentPage() {
 
   const updateLocation = async (orderId: string, lat: number, lng: number) => {
     try {
+      // Update local state so the agent's map marker moves instantly in realtime
+      setAgentPosition([lat, lng]);
+
       await supabase
         .from('orders')
         .update({ current_lat: lat, current_lng: lng })
@@ -301,7 +328,7 @@ export default function AgentPage() {
                        ? [selectedOrder.delivery_lat, selectedOrder.delivery_lng]
                        : undefined
                    }
-                   simulateMovement={true}
+               simulateMovement={false}
                    onLocationUpdate={(lat, lng) => updateLocation(selectedOrder.id, lat, lng)}
                  />
               </div>
