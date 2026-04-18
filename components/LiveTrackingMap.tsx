@@ -31,23 +31,34 @@ const destinationIcon = L.divIcon({
 // 🎥 Smart Cinematic Camera Controller
 function MapCameraController({ agentPos, destinationPos, route }: { agentPos: [number, number], destinationPos: [number, number] | null, route: [number, number][] }) {
   const map = useMap();
-  const hasFitBounds = useRef(false);
+  const lastKey = useRef("");
 
   useEffect(() => {
     map.invalidateSize();
+    
+    // Create a key to avoid continuous re-fitting if nothing meaningful changed
+    const key = `${agentPos[0]},${agentPos[1]}-${destinationPos?.[0]}-${destinationPos?.[1]}`;
+    if (key === lastKey.current) return;
 
-    if (!hasFitBounds.current && destinationPos) {
-      // On initial load, size the map to fit both the agent and destination
-      const bounds = L.latLngBounds([agentPos, destinationPos]);
+    if (agentPos[0] !== 0 && destinationPos && destinationPos[0] !== 0) {
+      const bounds = L.latLngBounds([
+        agentPos,
+        destinationPos
+      ]);
+      
+      // Extend bounds to include the route path if it exists
       if (route.length > 0) {
-        route.forEach(p => bounds.extend(p));
-        hasFitBounds.current = true; // Lock bounds fitting once the route is fully drawn
+        route.forEach(p => {
+          if (p[0] !== 0) bounds.extend(p);
+        });
       }
-      map.fitBounds(bounds, { padding: [80, 80], animate: true });
-    } else {
-      // Smoothly pan to follow the agent WITHOUT forcing the zoom level, 
-      // allowing the user to use their mouse scroll wheel freely.
-      map.panTo(agentPos, { animate: true, duration: 1.0 });
+      
+      map.fitBounds(bounds, { 
+        padding: [100, 100], 
+        animate: true,
+        maxZoom: 15
+      });
+      lastKey.current = key;
     }
   }, [agentPos, destinationPos, route, map]);
 
@@ -69,11 +80,15 @@ export default function LiveTrackingMap({
 }) {
   const [currentPosition, setCurrentPosition] = useState<[number, number]>(() => {
     if (delivery.current_lat && delivery.current_lng) return [delivery.current_lat, delivery.current_lng];
-    if (destinationCoordinates && destinationCoordinates[0] !== 0) return [destinationCoordinates[0] - 0.005, destinationCoordinates[1] - 0.005];
-    return [0, 0];
+    if (destinationCoordinates && destinationCoordinates[0] !== 0) return [destinationCoordinates[0] - 0.002, destinationCoordinates[1] - 0.002];
+    return [12.9716, 77.5946]; // Default to center if unknown
   });
 
-  const destinationPosition = destinationCoordinates ?? null;
+  const destinationPosition = useMemo<[number, number] | null>(() => {
+    if (destinationCoordinates && destinationCoordinates[0] !== 0) return destinationCoordinates;
+    return null;
+  }, [destinationCoordinates]);
+
   const [routeCoordinates, setRouteCoordinates] = useState<[number, number][]>([]);
   const [eta, setEta] = useState<number>(12);
   const [distance, setDistance] = useState<string>('0.0');
@@ -92,46 +107,57 @@ export default function LiveTrackingMap({
     return ((Math.atan2(y, x) * (180 / Math.PI) + 360) % 360);
   };
 
-  const lastFetchedDestination = useRef<string | null>(null);
+  // Helper for direct distance calculation (Haversine) as fallback
+  const getDirectDistance = (p1: [number, number], p2: [number, number]) => {
+    return L.latLng(p1).distanceTo(p2) / 1000;
+  };
+
+  const lastFetchRef = useRef<{ lat: number, lng: number, time: number } | null>(null);
 
   useEffect(() => {
     const fetchRoute = async () => {
       if (currentPosition[0] === 0 || !destinationPosition) return;
       
-      const destKey = `${destinationPosition[0]},${destinationPosition[1]}`;
-      
-      // If route is already fetched, dynamically update the remaining distance locally as agent moves
-      if (lastFetchedDestination.current === destKey) {
-        const dist = L.latLng(currentPosition).distanceTo(destinationPosition) / 1000;
-        setDistance((dist * 1.3).toFixed(1)); // 1.3 is a standard road detour factor
-        setEta(Math.ceil((dist * 1.3) * 4) + 2);
-        return;
+      const now = Date.now();
+      // Rate limiting: Only fetch route if moved > 50m OR more than 15 seconds passed
+      if (lastFetchRef.current) {
+        const distMoved = L.latLng(currentPosition).distanceTo([lastFetchRef.current.lat, lastFetchRef.current.lng]);
+        const timePassed = now - lastFetchRef.current.time;
+        if (distMoved < 50 && timePassed < 15000) return;
       }
 
       try {
         const url = `https://router.project-osrm.org/route/v1/driving/${currentPosition[1]},${currentPosition[0]};${destinationPosition[1]},${destinationPosition[0]}?overview=full&geometries=geojson`;
         const res = await fetch(url);
         const data = await res.json();
+        
         if (data.routes?.[0]) {
           const coords = data.routes[0].geometry.coordinates.map((c: any) => [c[1], c[0]]);
           setRouteCoordinates(coords);
-          setDistance((data.routes[0].distance / 1000).toFixed(1));
-          setEta(Math.ceil(data.routes[0].distance / 1000 * 4) + 2);
-          lastFetchedDestination.current = destKey;
+          
+          let distKm = data.routes[0].distance / 1000;
+          if (distKm < 0.1) {
+             distKm = getDirectDistance(currentPosition, destinationPosition) * 1.2;
+          }
+          
+          setDistance(distKm.toFixed(1));
+          setEta(Math.ceil(distKm * 4) + 2);
+          lastFetchRef.current = { lat: currentPosition[0], lng: currentPosition[1], time: now };
+        } else {
+           throw new Error("No route found");
         }
       } catch (err) {
-        console.warn('Route fetch failed', err);
-        setRouteCoordinates([currentPosition, destinationPosition as [number, number]]);
-        
-        const fallbackDist = L.latLng(currentPosition).distanceTo(destinationPosition) / 1000;
-        setDistance((fallbackDist * 1.3).toFixed(1));
-        setEta(Math.ceil((fallbackDist * 1.3) * 4) + 2);
-        
-        lastFetchedDestination.current = destKey;
+        // Only show fallback line if we have NO route at all yet
+        if (routeCoordinates.length === 0) {
+          const directDist = getDirectDistance(currentPosition, destinationPosition) * 1.3;
+          setDistance(directDist.toFixed(1));
+          setEta(Math.ceil(directDist * 4) + 2);
+          setRouteCoordinates([currentPosition, destinationPosition]);
+        }
       }
     };
     fetchRoute();
-  }, [currentPosition, destinationPosition]);
+  }, [currentPosition, destinationPosition, routeCoordinates.length]);
 
   useEffect(() => {
     if (delivery.current_lat && delivery.current_lng) {
