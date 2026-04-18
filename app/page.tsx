@@ -126,6 +126,64 @@ export default function Home() {
           </div>
         </div>
 
+        {/* 🌟 THE COMPLETE CATALOG: HIGH-IMPACT DUAL SECTION */}
+        <section className="mt-10 sm:mt-16">
+          <div className="mb-8 text-center sm:mb-12">
+            <h2 className="text-3xl font-black text-gray-900 sm:text-4xl tracking-tight">The Complete Catalog</h2>
+            <p className="mt-4 text-gray-500 font-medium max-w-2xl mx-auto">
+              Whether you're craving a gourmet chef-prepared meal or need to restock your pantry with the freshest ingredients, we've got you covered.
+            </p>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2 sm:gap-8">
+            {/* 🍔 FOOD CATALOG CARD */}
+            <Link
+              href="/products"
+              className="group relative h-[380px] overflow-hidden rounded-[2.5rem] border border-orange-100 bg-white shadow-[0_20px_50px_-20px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.01] hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)]"
+            >
+              <Image
+                src="/pexels-pedrofurtadoo-31094848.jpg"
+                alt="Gourmet Food Catalog"
+                fill
+                className="object-cover transition-transform duration-700 group-hover:scale-110"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 p-8">
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400 mb-2">Live Kitchen</p>
+                <h3 className="text-3xl font-black text-white">Explore Cuisines</h3>
+                <p className="mt-2 text-sm text-white/70 font-medium max-w-xs">From spicy biryanis to cheesy pizzas, discover the city's finest flavors delivered hot.</p>
+                <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-white px-6 py-2.5 text-xs font-black uppercase tracking-widest text-black transition-colors group-hover:bg-orange-500 group-hover:text-white">
+                  <span>Enter Store</span>
+                  <span>→</span>
+                </div>
+              </div>
+            </Link>
+
+            {/* 🥦 GROCERY CATALOG CARD */}
+            <Link
+              href="/grocery"
+              className="group relative h-[380px] overflow-hidden rounded-[2.5rem] border border-orange-100 bg-white shadow-[0_20px_50px_-20px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.01] hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)]"
+            >
+              <Image
+                src="/grocery-hero-new.jpg"
+                alt="Fresh Grocery Catalog"
+                fill
+                className="object-cover transition-transform duration-700 group-hover:scale-110"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 p-8">
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-green-400 mb-2">Farm Fresh</p>
+                <h3 className="text-3xl font-black text-white">Daily Essentials</h3>
+                <p className="mt-2 text-sm text-white/70 font-medium max-w-xs">Stock your kitchen with organic produce, dairy, and pantry staples picked fresh today.</p>
+                <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-white px-6 py-2.5 text-xs font-black uppercase tracking-widest text-black transition-colors group-hover:bg-green-600 group-hover:text-white">
+                  <span>Shop Grocery</span>
+                  <span>→</span>
+                </div>
+              </div>
+            </Link>
+          </div>
+        </section>
+
         <section className="mt-10 rounded-[2rem] border border-orange-100 bg-white p-5 shadow-sm sm:mt-12 sm:p-6 lg:p-8">
           <div className="grid items-center gap-6 md:grid-cols-[220px_1fr] lg:grid-cols-[260px_1fr]">
             <div className="relative mx-auto h-56 w-56 overflow-hidden rounded-[1.5rem] border border-orange-100 bg-orange-50 shadow-sm md:mx-0 md:h-64 md:w-64">

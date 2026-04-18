@@ -92,7 +92,7 @@ export default function Navigation() {
             </Link>
             <div className="hidden items-baseline space-x-2 md:ml-6 md:flex">
               <Link href="/products" className="rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-100">
-                Products
+                Menu
               </Link>
               <Link href="/grocery" className="rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-100">
                 Grocery
@@ -114,36 +114,50 @@ export default function Navigation() {
               )}
             </div>
           </div>
-          {/* 💻 DESKTOP AUTH: Hidden on mobile */}
-          <div className="hidden items-center space-x-3 md:flex">
+          {/* 💻 DESKTOP AUTH & KART: Unified layout */}
+          <div className="hidden items-center gap-4 md:flex">
             {state.user ? (
-              <>
-                <div className="h-8 w-[1px] bg-slate-200 mx-1"></div>
-                <div className="flex flex-col items-start mr-2">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1 text-right w-full">Authenticated</p>
+              <div className="flex items-center gap-3">
+                {/* Kart moves to the left of auth info */}
+                <Link href="/cart" className="group relative flex items-center justify-center p-2 rounded-xl transition-all hover:bg-slate-100">
+                  <svg className="w-6 h-6 text-slate-700 transition-colors group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  {cartItemCount > 0 && (
+                    <span className="absolute top-0 right-0 bg-blue-600 text-white text-[10px] font-black rounded-full h-5 w-5 flex items-center justify-center border-2 border-white shadow-sm transform translate-x-1 -translate-y-1">
+                      {cartItemCount}
+                    </span>
+                  )}
+                </Link>
+
+                <div className="h-8 w-[1px] bg-slate-200"></div>
+
+                <div className="flex flex-col items-start px-2">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Authenticated</p>
                   <span className="max-w-32 truncate text-xs font-bold text-slate-900 leading-none">{state.user.email}</span>
                 </div>
+
                 <button
                   onClick={handleLogout}
                   className="bg-slate-900 text-white text-[10px] font-black px-4 py-2 rounded-xl hover:bg-slate-800 transition-all shadow-md active:scale-95 uppercase tracking-widest"
                 >
                   Logout
                 </button>
-              </>
+              </div>
             ) : (
-              <>
+              <div className="flex items-center gap-6">
                 <Link href="/login" className="text-xs font-black text-slate-900 hover:text-blue-600 transition-colors uppercase tracking-widest">
                   Login
                 </Link>
                 <Link href="/signup" className="bg-blue-600 text-white text-[10px] font-black px-5 py-2.5 rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 uppercase tracking-widest">
                   Sign Up
                 </Link>
-              </>
+              </div>
             )}
           </div>
 
-          {/* 📱 MOBILE & DESKTOP KART + MENU TOGGLE */}
-          <div className="flex items-center gap-2">
+          {/* 📱 MOBILE KART + MENU TOGGLE */}
+          <div className="flex items-center gap-2 md:hidden">
             {state.user && (
               <Link href="/cart" className="group relative flex items-center justify-center p-2 rounded-xl transition-all hover:bg-slate-100">
                 <svg className="w-6 h-6 text-slate-700 transition-colors group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -159,9 +173,9 @@ export default function Navigation() {
             <button
               type="button"
               onClick={() => setIsMenuOpen((open) => !open)}
-              className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-black px-4 py-2 text-[12px] font-black text-white hover:bg-slate-50 transition-all active:scale-95 uppercase tracking-widest"
+              className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-black px-4 py-2 text-[10px] font-black text-white hover:bg-slate-800 transition-all active:scale-95 uppercase tracking-widest"
             >
-              {isMenuOpen ? 'CLOSE' : 'Sign Up'}
+              {isMenuOpen ? 'X' : 'Sign Up'}
             </button>
           </div>
         </div>
