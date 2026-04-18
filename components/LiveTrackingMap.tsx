@@ -133,12 +133,12 @@ export default function LiveTrackingMap({
       (pos) => {
         const { latitude, longitude, heading } = pos.coords;
         const now = Date.now();
-        
+
         // Update local map position immediately for agent
         setCurrentPosition(prev => {
           if (prev[0] !== 0) {
-             const newRotation = calculateBearing(prev, [latitude, longitude]);
-             if (newRotation !== 0) setRotation(newRotation);
+            const newRotation = calculateBearing(prev, [latitude, longitude]);
+            if (newRotation !== 0) setRotation(newRotation);
           }
           return [latitude, longitude];
         });
@@ -163,7 +163,7 @@ export default function LiveTrackingMap({
   // 🏎️ Ultra-Smooth Glide Movement (SIMULATION MODE)
   useEffect(() => {
     if (!simulateMovement || currentPosition[0] === 0 || routeCoordinates.length < 2) return;
-    
+
     let index = 0;
     const interval = setInterval(() => {
       if (index < routeCoordinates.length - 1) {
@@ -171,14 +171,14 @@ export default function LiveTrackingMap({
         const p1 = routeCoordinates[index - 1];
         const p2 = routeCoordinates[index];
         setRotation(calculateBearing(p1, p2));
-        
+
         setCurrentPosition(p2);
         onLocationUpdate(p2[0], p2[1]);
       } else {
         clearInterval(interval);
       }
     }, 1200);
-    
+
     return () => clearInterval(interval);
   }, [simulateMovement, routeCoordinates, onLocationUpdate]);
 
