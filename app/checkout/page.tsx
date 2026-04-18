@@ -108,11 +108,24 @@ export default function CheckoutPage() {
   };
 
   useEffect(() => {
+    if (state.isLoading) return; // Wait for auth to initialize
+    
     if (!state.user) {
       router.push('/login');
       return;
     }
-  }, [state.user, router]);
+  }, [state.user, state.isLoading, router]);
+
+  if (state.isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+          <p className="text-sm font-black text-indigo-400 uppercase tracking-widest leading-none">Syncing Profile</p>
+        </div>
+      </div>
+    );
+  }
 
   if (state.cart.length === 0 && !orderSubmitted) {
     return (
