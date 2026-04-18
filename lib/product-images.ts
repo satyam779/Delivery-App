@@ -56,7 +56,7 @@ function normalize(value?: string) {
 
 export function getProductImageUrl(product: Pick<Product, 'name' | 'category' | 'image_url'>) {
   // Check if it's already a full URL or a valid relative path from product-images
-  if (product.image_url?.startsWith('http') || (product.image_url && !product.image_url.includes('.'))) {
+  if (product.image_url?.startsWith('http') || product.image_url?.startsWith('/')) {
     return product.image_url;
   }
 

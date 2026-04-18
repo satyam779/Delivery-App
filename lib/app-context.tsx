@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useReducer, ReactNode } from 'react';
+import { createContext, useContext, useReducer, ReactNode, useCallback, useMemo } from 'react';
 import { CartItem, User } from '@/lib/types';
 
 interface AppState {
@@ -25,7 +25,7 @@ const initialState: AppState = {
 
 function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
-    case 'ADD_TO_CART':
+    case 'ADD_TO_CART': {
       const existingItem = state.cart.find(item => item.product.id === action.payload.product.id);
       if (existingItem) {
         return {
@@ -38,6 +38,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         };
       }
       return { ...state, cart: [...state.cart, action.payload] };
+    }
 
     case 'REMOVE_FROM_CART':
       return { ...state, cart: state.cart.filter(item => item.product.id !== action.payload) };
@@ -69,23 +70,25 @@ function appReducer(state: AppState, action: AppAction): AppState {
 const AppContext = createContext<{
   state: AppState;
   dispatch: React.Dispatch<AppAction>;
-  addToCart: (product: any, quantity?: number) => void;
+  addToCart: (product: CartItem['product'], quantity?: number) => void;
   removeFromCart: (productId: string) => void;
 } | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
-  const addToCart = (product: any, quantity: number = 1) => {
+  const addToCart = useCallback((product: CartItem['product'], quantity: number = 1) => {
     dispatch({ type: 'ADD_TO_CART', payload: { product, quantity } });
-  };
+  }, []);
 
-  const removeFromCart = (productId: string) => {
+  const removeFromCart = useCallback((productId: string) => {
     dispatch({ type: 'REMOVE_FROM_CART', payload: productId });
-  };
+  }, []);
+
+  const value = useMemo(() => ({ state, dispatch, addToCart, removeFromCart }), [state, addToCart, removeFromCart]);
 
   return (
-    <AppContext.Provider value={{ state, dispatch, addToCart, removeFromCart }}>
+    <AppContext.Provider value={value}>
       {children}
     </AppContext.Provider>
   );
