@@ -80,15 +80,16 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="relative flex min-h-16 items-center justify-between py-3 md:py-0">
           <div className="flex min-w-0 items-center gap-4">
-            <Link href="/" className="flex items-center gap-3 text-lg font-bold text-black sm:text-xl">
-              <Image
-                src="/favicon.ico"
-                alt="Delivery App logo"
-                width={36}
-                height={36}
-                className="rounded-md"
-              />
-              <span>Delivery App</span>
+            <Link href="/" className="flex flex-col items-center group transition-all">
+              <div className="relative h-10 w-10 overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm transition-transform group-hover:scale-110">
+                <Image
+                  src="/supra-logo.png"
+                  alt="SUPRA Logo"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              <span className="mt-1 text-[10px] font-black uppercase tracking-[0.25em] text-slate-900 leading-none">SUPRA</span>
             </Link>
             <div className="hidden items-baseline space-x-2 md:ml-6 md:flex">
               <Link href="/products" className="rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-100">
