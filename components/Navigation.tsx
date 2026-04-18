@@ -16,7 +16,7 @@ export default function Navigation() {
     const getUser = async () => {
       try {
         const { data: { user }, error } = await supabase.auth.getUser();
-        
+
         if (error) {
           // If refresh token is invalid/not found, force a clean state
           if (error.message.includes('Refresh Token') || error.status === 401) {
@@ -114,45 +114,56 @@ export default function Navigation() {
               )}
             </div>
           </div>
+          {/* 💻 DESKTOP AUTH: Hidden on mobile */}
           <div className="hidden items-center space-x-3 md:flex">
             {state.user ? (
               <>
-                <Link href="/cart" className="relative rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-100">
-                  Cart
-                  {cartItemCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                      {cartItemCount}
-                    </span>
-                  )}
-                </Link>
-                <span className="max-w-48 truncate text-sm text-black">Welcome, {state.user.email}</span>
+                <div className="h-8 w-[1px] bg-slate-200 mx-1"></div>
+                <div className="flex flex-col items-start mr-2">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1 text-right w-full">Authenticated</p>
+                  <span className="max-w-32 truncate text-xs font-bold text-slate-900 leading-none">{state.user.email}</span>
+                </div>
                 <button
                   onClick={handleLogout}
-                  className="rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-100"
+                  className="bg-slate-900 text-white text-[10px] font-black px-4 py-2 rounded-xl hover:bg-slate-800 transition-all shadow-md active:scale-95 uppercase tracking-widest"
                 >
                   Logout
                 </button>
               </>
             ) : (
               <>
-                <Link href="/login" className="rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-100">
+                <Link href="/login" className="text-xs font-black text-slate-900 hover:text-blue-600 transition-colors uppercase tracking-widest">
                   Login
                 </Link>
-                <Link href="/signup" className="bg-blue-600 text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium">
+                <Link href="/signup" className="bg-blue-600 text-white text-[10px] font-black px-5 py-2.5 rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 uppercase tracking-widest">
                   Sign Up
                 </Link>
               </>
             )}
           </div>
-          <button
-            type="button"
-            aria-expanded={isMenuOpen}
-            aria-label="Toggle navigation menu"
-            onClick={() => setIsMenuOpen((open) => !open)}
-            className="inline-flex items-center justify-center rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-semibold text-black shadow-sm md:hidden"
-          >
-            {isMenuOpen ? 'Close' : 'Menu'}
-          </button>
+
+          {/* 📱 MOBILE & DESKTOP KART + MENU TOGGLE */}
+          <div className="flex items-center gap-2">
+            {state.user && (
+              <Link href="/cart" className="group relative flex items-center justify-center p-2 rounded-xl transition-all hover:bg-slate-100">
+                <svg className="w-6 h-6 text-slate-700 transition-colors group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                {cartItemCount > 0 && (
+                  <span className="absolute top-0 right-0 bg-blue-600 text-white text-[10px] font-black rounded-full h-5 w-5 flex items-center justify-center border-2 border-white shadow-sm transform translate-x-1 -translate-y-1">
+                    {cartItemCount}
+                  </span>
+                )}
+              </Link>
+            )}
+            <button
+              type="button"
+              onClick={() => setIsMenuOpen((open) => !open)}
+              className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-black px-4 py-2 text-[12px] font-black text-white hover:bg-slate-50 transition-all active:scale-95 uppercase tracking-widest"
+            >
+              {isMenuOpen ? 'CLOSE' : 'Sign Up'}
+            </button>
+          </div>
         </div>
         {isMenuOpen && (
           <div className="absolute right-4 top-[72px] z-30 w-[min(18rem,calc(100vw-2rem))] rounded-2xl border border-orange-100 bg-white p-3 shadow-[0_20px_40px_-24px_rgba(15,23,42,0.45)] md:hidden sm:right-6">

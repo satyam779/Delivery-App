@@ -33,10 +33,10 @@ export default function Home() {
                   Browse Food
                 </Link>
                 <Link
-                  href="/cart"
+                  href="/grocery"
                   className="rounded-xl border border-gray-300 bg-white px-6 py-3 text-center text-sm font-semibold text-black transition hover:bg-gray-50"
                 >
-                  View Cart
+                  Grocery Store
                 </Link>
               </div>
 
@@ -86,7 +86,7 @@ export default function Home() {
                     </div>
                   </div>
 
-                  
+
                 </div>
               </div>
 
@@ -120,7 +120,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                
+
               </div>
             </div>
           </div>

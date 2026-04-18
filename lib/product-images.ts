@@ -15,9 +15,9 @@ const categoryImageMap: Record<string, string> = {
 
 const productImageMap: Record<string, string> = {
   // Food Items
-  'egg puff': 'https://images.unsplash.com/photo-1626074353765-517a681e40be?auto=format&fit=crop&w=800&q=80',
+  'egg puff': 'https://images.pexels.com/photos/17104937/pexels-photo-17104937.jpeg',
   'biryani': 'https://images.unsplash.com/photo-1589302168068-964664d93dc0?auto=format&fit=crop&w=800&q=80',
-  'cool drinks': 'https://images.unsplash.com/photo-1544145945-f904253d0c71?auto=format&fit=crop&w=800&q=80',
+  'cool drinks': 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=800&q=80',
   'chicken burger': 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80',
   'caesar salad': 'https://images.unsplash.com/photo-1550304943-4f24f54ddde9?auto=format&fit=crop&w=800&q=80',
   'pasta carbonara': 'https://images.unsplash.com/photo-1673442635965-34f1b36d8944?auto=format&fit=crop&w=800&q=80',
@@ -30,14 +30,17 @@ const productImageMap: Record<string, string> = {
   // Grocery Items
   'fresh tomatoes': 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=800&q=80',
   'organic onions': 'https://images.unsplash.com/photo-1508747703725-719777637510?auto=format&fit=crop&w=800&q=80',
-  'red potatoes': 'https://images.pexels.com/photos/144248/potatoes-vegetables-food-fresh-144248.jpeg?auto=compress&cs=tinysrgb&w=800',
+  'red potatoes': 'https://images.unsplash.com/photo-1590165482129-1b8b27698780?auto=format&fit=crop&w=800&q=80',
   'fresh milk': 'https://images.pexels.com/photos/248412/pexels-photo-248412.jpeg?auto=compress&cs=tinysrgb&w=800',
   'brown bread': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80',
   'large eggs': 'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?auto=format&fit=crop&w=800&q=80',
   'basmati rice': 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=800&q=80',
-  'sunflower oil': 'https://images.pexels.com/photos/1024545/pexels-photo-1024545.jpeg?auto=compress&cs=tinysrgb&w=800',
+  'sunflower oil': 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=800&q=80',
   'ata flour': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80',
-  'table salt': 'https://images.pexels.com/photos/4199582/pexels-photo-4199582.jpeg?auto=compress&cs=tinysrgb&w=800',
+  'atta': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80',
+  'chakki atta': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80',
+  'table salt': 'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=800&q=80',
+  'iodized salt': 'https://images.unsplash.com/photo-1555529731-118a5a683431?auto=format&fit=crop&w=800&q=80',
   'sugar': 'https://images.unsplash.com/photo-1581441363689-1f3c3c414635?auto=format&fit=crop&w=800&q=80',
   'tea powder': 'https://images.unsplash.com/photo-1594631252845-29fc4cc8cde9?auto=format&fit=crop&w=800&q=80',
   'coffee beans': 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?auto=format&fit=crop&w=800&q=80',
@@ -55,14 +58,26 @@ function normalize(value?: string) {
 }
 
 export function getProductImageUrl(product: Pick<Product, 'name' | 'category' | 'image_url'>) {
-  // Check if it's already a full URL or a valid relative path from product-images
-  if (product.image_url?.startsWith('http') || product.image_url?.startsWith('/')) {
-    return product.image_url;
+  const normName = normalize(product.name);
+
+  // 1. Explicit Exact Match (High Priority)
+  if (productImageMap[normName]) {
+    console.log(`[ImageMap] Match Found: ${product.name} -> ${productImageMap[normName]}`);
+    return productImageMap[normName];
   }
 
-  const productMatch = productImageMap[normalize(product.name)];
-  if (productMatch) {
-    return productMatch;
+  // 1.5 Deep Keyword Lookup (Medium-High Priority)
+  const keywords = Object.keys(productImageMap);
+  const keywordMatch = keywords.find(key => normName.includes(key));
+  if (keywordMatch) {
+    console.log(`[ImageMap] Keyword Match Found: ${product.name} contains "${keywordMatch}" -> ${productImageMap[keywordMatch]}`);
+    return productImageMap[keywordMatch];
+  }
+
+  // 2. Database URL (if valid)
+  if (product.image_url && (product.image_url.startsWith('http') || product.image_url.startsWith('/'))) {
+    console.log(`[ImageMap] Using Database URL: ${product.name} -> ${product.image_url}`);
+    return product.image_url;
   }
 
   const categoryMatch = categoryImageMap[normalize(product.category)];
@@ -70,6 +85,6 @@ export function getProductImageUrl(product: Pick<Product, 'name' | 'category' | 
     return categoryMatch;
   }
 
-  // Final fallback to a high-quality generic food placeholder
+  // Final fallback
   return 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80';
 }
