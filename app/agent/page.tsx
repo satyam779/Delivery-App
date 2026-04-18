@@ -76,7 +76,13 @@ export default function AgentPage() {
 
       const { data, error } = await supabase
         .from('orders')
-        .select('*')
+        .select(`
+          *,
+          order_items (
+            *,
+            products (*)
+          )
+        `)
         .eq('agent_id', agentId)
         .order('created_at', { ascending: false });
 
@@ -215,13 +221,30 @@ export default function AgentPage() {
                       {order.status}
                     </span>
                   </div>
-                  <div className="space-y-2 mb-8">
+                  <div className="space-y-4 mb-8">
                     <p className="text-sm text-gray-500 flex items-center gap-2">
                        {order.delivery_address}
                     </p>
-                    <p className="text-lg font-bold text-gray-900">
-                      {formatCurrency(order.total_amount)}
-                    </p>
+                    
+                    {/* 📦 USER ORDER DETAILS */}
+                    <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Order Items</p>
+                      <div className="space-y-3">
+                        {(order as any).order_items?.map((item: any) => (
+                          <div key={item.id} className="flex justify-between items-center text-xs font-bold">
+                            <span className="text-slate-600">
+                              <span className="text-blue-600 mr-2">{item.quantity}x</span>
+                              {item.products?.name || 'Unknown Item'}
+                            </span>
+                            <span className="text-slate-900">{formatCurrency(item.price)}</span>
+                          </div>
+                        ))}
+                        <div className="pt-3 mt-3 border-t border-slate-200 flex justify-between items-center">
+                          <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Total Amount</span>
+                          <span className="text-lg font-black text-blue-600">{formatCurrency(order.total_amount)}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   <div className="flex flex-wrap gap-3">
                     {order.status === 'accepted' && (

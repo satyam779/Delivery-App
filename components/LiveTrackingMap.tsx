@@ -115,20 +115,29 @@ export default function LiveTrackingMap({
   const lastFetchRef = useRef<{ lat: number, lng: number, time: number } | null>(null);
 
   useEffect(() => {
-    const fetchRoute = async () => {
-      if (currentPosition[0] === 0 || !destinationPosition) return;
+    // 🧠 ROUTE INTELLIGENCE: 
+    // Only fetch driving route if we don't have one, or if we've moved significantly.
+    // We NEVER downgrade from a road-route (many points) back to a straight line.
+    const fetchRoute = async (retries = 2) => {
+      if (simulateMovement || currentPosition[0] === 0 || !destinationPosition) return;
       
       const now = Date.now();
-      // Rate limiting: Only fetch route if moved > 50m OR more than 15 seconds passed
+      const hasRoadRoute = routeCoordinates.length > 2;
+      
       if (lastFetchRef.current) {
         const distMoved = L.latLng(currentPosition).distanceTo([lastFetchRef.current.lat, lastFetchRef.current.lng]);
         const timePassed = now - lastFetchRef.current.time;
-        if (distMoved < 50 && timePassed < 15000) return;
+        const threshold = hasRoadRoute ? 300 : 50; 
+        if (distMoved < threshold && timePassed < 15000) return;
       }
 
       try {
-        const url = `https://router.project-osrm.org/route/v1/driving/${currentPosition[1]},${currentPosition[0]};${destinationPosition[1]},${destinationPosition[0]}?overview=full&geometries=geojson`;
+        // 🛰️ ULTRA-RESILIENT FETCH: Added radiuses=5000 to snap to roads even if coordinates are slightly off-road
+        const url = `https://router.project-osrm.org/route/v1/driving/${currentPosition[1]},${currentPosition[0]};${destinationPosition[1]},${destinationPosition[0]}?overview=full&geometries=geojson&radiuses=5000;5000`;
         const res = await fetch(url);
+        
+        if (!res.ok) throw new Error(`OSRM Error: ${res.status}`);
+        
         const data = await res.json();
         
         if (data.routes?.[0]) {
@@ -136,18 +145,21 @@ export default function LiveTrackingMap({
           setRouteCoordinates(coords);
           
           let distKm = data.routes[0].distance / 1000;
-          if (distKm < 0.1) {
-             distKm = getDirectDistance(currentPosition, destinationPosition) * 1.2;
-          }
+          if (distKm < 0.1) distKm = getDirectDistance(currentPosition, destinationPosition) * 1.2;
           
           setDistance(distKm.toFixed(1));
           setEta(Math.ceil(distKm * 4) + 2);
           lastFetchRef.current = { lat: currentPosition[0], lng: currentPosition[1], time: now };
-        } else {
-           throw new Error("No route found");
+        } else if (retries > 0) {
+          // Retry with even larger radius if failed
+          setTimeout(() => fetchRoute(retries - 1), 2000);
         }
       } catch (err) {
-        // Only show fallback line if we have NO route at all yet
+        if (retries > 0) {
+           setTimeout(() => fetchRoute(retries - 1), 3000);
+           return;
+        }
+        
         if (routeCoordinates.length === 0) {
           const directDist = getDirectDistance(currentPosition, destinationPosition) * 1.3;
           setDistance(directDist.toFixed(1));
@@ -157,7 +169,7 @@ export default function LiveTrackingMap({
       }
     };
     fetchRoute();
-  }, [currentPosition, destinationPosition, routeCoordinates.length]);
+  }, [currentPosition, destinationPosition, simulateMovement]);
 
   useEffect(() => {
     if (delivery.current_lat && delivery.current_lng) {
