@@ -29,30 +29,25 @@ const destinationIcon = L.divIcon({
 });
 
 // 🎥 Smart Cinematic Camera Controller
-function MapCameraController({ agentPos, destinationPos, route }: { agentPos: [number, number], destinationPos: [number, number], route: [number, number][] }) {
+function MapCameraController({ agentPos, destinationPos, route }: { agentPos: [number, number], destinationPos: [number, number] | null, route: [number, number][] }) {
   const map = useMap();
-  const lastUpdate = useRef(0);
+  const hasFitBounds = useRef(false);
 
   useEffect(() => {
-    const now = Date.now();
-    if (now - lastUpdate.current < 1000) return; // Throttling for smoothness
-    lastUpdate.current = now;
-
     map.invalidateSize();
 
-    const dLat = Math.abs(agentPos[0] - destinationPos[0]);
-    const dLng = Math.abs(agentPos[1] - destinationPos[1]);
-    const distance = Math.sqrt(dLat * dLat + dLng * dLng);
-
-    // Dynamic Camera Logic:
-    // If agent is close (< 800m), zoom in for street-level tracking
-    // If agent is far, show the full route
-    if (distance < 0.005) {
-      map.setView(agentPos, 17, { animate: true, duration: 1.5 });
-    } else {
+    if (!hasFitBounds.current && destinationPos) {
+      // On initial load, size the map to fit both the agent and destination
       const bounds = L.latLngBounds([agentPos, destinationPos]);
-      if (route.length > 0) route.forEach(p => bounds.extend(p));
-      map.fitBounds(bounds, { padding: [100, 100], animate: true, duration: 1.5 });
+      if (route.length > 0) {
+        route.forEach(p => bounds.extend(p));
+        hasFitBounds.current = true; // Lock bounds fitting once the route is fully drawn
+      }
+      map.fitBounds(bounds, { padding: [80, 80], animate: true });
+    } else {
+      // Smoothly pan to follow the agent WITHOUT forcing the zoom level, 
+      // allowing the user to use their mouse scroll wheel freely.
+      map.panTo(agentPos, { animate: true, duration: 1.0 });
     }
   }, [agentPos, destinationPos, route, map]);
 
@@ -233,8 +228,8 @@ export default function LiveTrackingMap({
         <MapContainer
           center={currentPosition}
           zoom={16}
-          zoomControl={false}
-          scrollWheelZoom={false}
+          zoomControl={true}
+          scrollWheelZoom={true}
           style={{ height: '100%', width: '100%' }}
         >
           <TileLayer
@@ -268,18 +263,20 @@ export default function LiveTrackingMap({
             </Popup>
           </Marker>
 
-          <Marker position={destinationPosition || currentPosition} icon={destinationIcon}>
-            <Popup closeButton={false} className="ultra-popup">
-              <div className="text-center py-1">
-                <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-2">Delivery At</p>
-                <p className="text-sm font-bold text-slate-700 leading-snug">{destinationAddress ?? 'Destination Point'}</p>
-              </div>
-            </Popup>
-          </Marker>
+          {destinationPosition && (
+            <Marker position={destinationPosition} icon={destinationIcon}>
+              <Popup closeButton={false} className="ultra-popup">
+                <div className="text-center py-1">
+                  <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-2">Delivery At</p>
+                  <p className="text-sm font-bold text-slate-700 leading-snug">{destinationAddress ?? 'Destination Point'}</p>
+                </div>
+              </Popup>
+            </Marker>
+          )}
 
           <MapCameraController
             agentPos={currentPosition}
-            destinationPos={destinationPosition || currentPosition}
+            destinationPos={destinationPosition}
             route={routeCoordinates}
           />
         </MapContainer>
