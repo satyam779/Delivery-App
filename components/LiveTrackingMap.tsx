@@ -73,7 +73,7 @@ export default function LiveTrackingMap({
     return [0, 0];
   });
 
-  const [destinationPosition] = useState<[number, number] | null>(destinationCoordinates ?? null);
+  const destinationPosition = destinationCoordinates ?? null;
   const [routeCoordinates, setRouteCoordinates] = useState<[number, number][]>([]);
   const [eta, setEta] = useState<number>(12);
   const [distance, setDistance] = useState<string>('0.0');
@@ -92,9 +92,22 @@ export default function LiveTrackingMap({
     return ((Math.atan2(y, x) * (180 / Math.PI) + 360) % 360);
   };
 
+  const lastFetchedDestination = useRef<string | null>(null);
+
   useEffect(() => {
     const fetchRoute = async () => {
       if (currentPosition[0] === 0 || !destinationPosition) return;
+      
+      const destKey = `${destinationPosition[0]},${destinationPosition[1]}`;
+      
+      // If route is already fetched, dynamically update the remaining distance locally as agent moves
+      if (lastFetchedDestination.current === destKey) {
+        const dist = L.latLng(currentPosition).distanceTo(destinationPosition) / 1000;
+        setDistance((dist * 1.3).toFixed(1)); // 1.3 is a standard road detour factor
+        setEta(Math.ceil((dist * 1.3) * 4) + 2);
+        return;
+      }
+
       try {
         const url = `https://router.project-osrm.org/route/v1/driving/${currentPosition[1]},${currentPosition[0]};${destinationPosition[1]},${destinationPosition[0]}?overview=full&geometries=geojson`;
         const res = await fetch(url);
@@ -104,10 +117,17 @@ export default function LiveTrackingMap({
           setRouteCoordinates(coords);
           setDistance((data.routes[0].distance / 1000).toFixed(1));
           setEta(Math.ceil(data.routes[0].distance / 1000 * 4) + 2);
+          lastFetchedDestination.current = destKey;
         }
       } catch (err) {
         console.warn('Route fetch failed', err);
         setRouteCoordinates([currentPosition, destinationPosition as [number, number]]);
+        
+        const fallbackDist = L.latLng(currentPosition).distanceTo(destinationPosition) / 1000;
+        setDistance((fallbackDist * 1.3).toFixed(1));
+        setEta(Math.ceil((fallbackDist * 1.3) * 4) + 2);
+        
+        lastFetchedDestination.current = destKey;
       }
     };
     fetchRoute();
