@@ -135,6 +135,17 @@ export default function AgentPage() {
     }
   };
 
+  if (state.isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+          <p className="text-sm font-black text-slate-400 uppercase tracking-widest">Restoring Session...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!state.user || state.user.role !== 'agent') {
     return (
       <div className="min-h-[calc(100vh-4rem)] bg-[radial-gradient(circle_at_top,_rgba(37,99,235,0.08),_transparent_30%)] flex items-center justify-center px-4">

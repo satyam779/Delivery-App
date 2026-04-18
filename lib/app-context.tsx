@@ -1,7 +1,8 @@
 'use client';
 
-import { createContext, useContext, useReducer, ReactNode, useCallback, useMemo } from 'react';
+import { createContext, useContext, useReducer, ReactNode, useCallback, useMemo, useEffect } from 'react';
 import { CartItem, User } from '@/lib/types';
+import { supabase } from './supabase';
 
 interface AppState {
   cart: CartItem[];
@@ -20,7 +21,7 @@ type AppAction =
 const initialState: AppState = {
   cart: [],
   user: null,
-  isLoading: false,
+  isLoading: true,
 };
 
 function appReducer(state: AppState, action: AppAction): AppState {
@@ -76,6 +77,49 @@ const AppContext = createContext<{
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
+
+  // 🔐 PERSISTENT AUTH SESSION RECOVERY
+  useEffect(() => {
+    const initSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          dispatch({
+            type: 'SET_USER',
+            payload: {
+              id: session.user.id,
+              email: session.user.email!,
+              role: session.user.user_metadata?.role || 'customer',
+            },
+          });
+        }
+      } catch (err) {
+        console.warn('Session recovery failed:', err);
+      } finally {
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
+    };
+
+    initSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        dispatch({
+          type: 'SET_USER',
+          payload: {
+            id: session.user.id,
+            email: session.user.email!,
+            role: session.user.user_metadata?.role || 'customer',
+          },
+        });
+      } else {
+        dispatch({ type: 'SET_USER', payload: null });
+      }
+      dispatch({ type: 'SET_LOADING', payload: false });
+    });
+
+    return () => subscription?.unsubscribe();
+  }, []);
 
   const addToCart = useCallback((product: CartItem['product'], quantity: number = 1) => {
     dispatch({ type: 'ADD_TO_CART', payload: { product, quantity } });

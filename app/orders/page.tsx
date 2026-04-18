@@ -63,6 +63,8 @@ export default function OrdersPage() {
   };
 
   useEffect(() => {
+    if (state.isLoading) return; // Wait for auth to initialize
+    
     if (!state.user) {
       router.push('/login');
       return;
